@@ -48,6 +48,8 @@
             button4 = new Button();
             button5 = new Button();
             PBarLoadding = new ProgressBar();
+            flowLayoutPanel2 = new FlowLayoutPanel();
+            BtnFormat = new Button();
             tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
@@ -56,6 +58,7 @@
             ((System.ComponentModel.ISupportInitialize) VVVlc).BeginInit();
             FlowLayoutPlayerButtons.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
+            flowLayoutPanel2.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -293,12 +296,31 @@
             PBarLoadding.Step = 1;
             PBarLoadding.TabIndex = 6;
             // 
+            // flowLayoutPanel2
+            // 
+            flowLayoutPanel2.Controls.Add(BtnFormat);
+            flowLayoutPanel2.Location = new Point(300, 20);
+            flowLayoutPanel2.Name = "flowLayoutPanel2";
+            flowLayoutPanel2.Size = new Size(158, 36);
+            flowLayoutPanel2.TabIndex = 7;
+            // 
+            // BtnFormat
+            // 
+            BtnFormat.Enabled = false;
+            BtnFormat.Image = Properties.Resources.add;
+            BtnFormat.Location = new Point(3, 3);
+            BtnFormat.Name = "BtnFormat";
+            BtnFormat.Size = new Size(32, 32);
+            BtnFormat.TabIndex = 0;
+            BtnFormat.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             AllowDrop = true;
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1187, 686);
+            Controls.Add(flowLayoutPanel2);
             Controls.Add(PBarLoadding);
             Controls.Add(flowLayoutPanel1);
             Controls.Add(tableLayoutPanel1);
@@ -318,6 +340,7 @@
             FlowLayoutPlayerButtons.ResumeLayout(false);
             FlowLayoutPlayerButtons.PerformLayout();
             flowLayoutPanel1.ResumeLayout(false);
+            flowLayoutPanel2.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -341,5 +364,7 @@
         private SplitContainer splitContainer1;
         private FlowLayoutPanel FlowLayoutPlayerButtons;
         private ProgressBar PBarLoadding;
+        private FlowLayoutPanel flowLayoutPanel2;
+        private Button BtnFormat;
     }
 }

@@ -1,4 +1,5 @@
 using AV1bitsAnalyzer.Library;
+using AV1bitsAnalyzer.Properties;
 using Be.Windows.Forms;
 using LibVLCSharp.Shared;
 using System.Diagnostics;
@@ -71,21 +72,41 @@ namespace AV1bitsAnalyzer
             }
 
             _parseFilePath = filename;
+            var type = ParseType.ParseType_IVF;
             if ( File.Exists(_parseFilePath) )
             {
                 _parser = new AV1Demuxer();
                 bool ivf = BinaryProbe.AV1IVF(_parseFilePath);
+                bool annexb = false;
 
-                if ( ivf )
+                if ( !ivf )
                 {
-                    _parser.Parse(_parseFilePath, ParseType.ParseType_IVF, new FrameCallbackHandle(OnGetFrame));
+                    annexb = BinaryProbe.ObuAnnexB(_parseFilePath);
                 }
-                else
-                {
-                    bool annexb = BinaryProbe.ObuAnnexB(_parseFilePath);
-                    _parser.Parse(_parseFilePath, annexb ? ParseType.ParseType_OBU_AnnexB : ParseType.ParseType_OBU_Section5, new FrameCallbackHandle(OnGetFrame));
-                }
+
+                type = ivf ? ParseType.ParseType_IVF :
+                    annexb ? ParseType.ParseType_OBU_AnnexB :
+                    ParseType.ParseType_OBU_Section5;
+
+                _parser.Parse(_parseFilePath, type, new FrameCallbackHandle(OnGetFrame));
             }
+
+            var bmp = Resources.ivf;
+            switch ( type )
+            {
+                case ParseType.ParseType_IVF:
+                    bmp = Resources.ivf;
+                    break;
+                case ParseType.ParseType_OBU_Section5:
+                    bmp = Resources.se5;
+                    break;
+                case ParseType.ParseType_OBU_AnnexB:
+                    bmp = Resources.axb;
+                    break;
+            }
+
+            BtnFormat.Image = bmp;
+
             this.Text = $"{_MainFrameTextDefault} ( {_parseFilePath} )";
         }
 
@@ -180,6 +201,10 @@ namespace AV1bitsAnalyzer
                         };
                         Debug.Assert(lvi.SubItems.Count == 7);
                         LVHexInfo.Items.Add(lvi);
+                        if(f.Type == OBUType.OBU_TEMPORAL_DELIMITER )
+                        {
+                            lvi.BackColor = Color.GhostWhite;
+                        }
                     }
                     LVHexInfo.EndUpdate();
                 }
@@ -334,12 +359,15 @@ namespace AV1bitsAnalyzer
                 HexBoxDetail.LineInfoOffset = v.Address;
                 HexBoxDetail.Select(0, v.Offset);
 
-                string targetString = v.PkgHeader;
-                RBoxObu.Invoke(() =>
+                if(v.Type != OBUType.OBU_TEMPORAL_DELIMITER )
                 {
-                    RBoxObu.Text = targetString;
-                });
-
+                    string targetString = v.PkgHeader;
+                    RBoxObu.Invoke(() =>
+                    {
+                        RBoxObu.Text = targetString;
+                    });
+                }
+                
                 var idx = (item.Index + 1) * 1.0f;
                 var total = LVHexInfo.Items.Count;
                 ReportProgress(idx / total);

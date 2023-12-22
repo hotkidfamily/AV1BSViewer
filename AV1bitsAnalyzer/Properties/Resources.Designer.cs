@@ -90,7 +90,17 @@ namespace AV1bitsAnalyzer.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Build 2023/10/30 18:10:41.22 
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap axb {
+            get {
+                object obj = ResourceManager.GetObject("axb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 2023/12/22 15:24:29.47 
         /// 的本地化字符串。
         /// </summary>
         internal static string BuildDate {
@@ -122,9 +132,29 @@ namespace AV1bitsAnalyzer.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap ivf {
+            get {
+                object obj = ResourceManager.GetObject("ivf", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap refresh {
             get {
                 object obj = ResourceManager.GetObject("refresh", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap se5 {
+            get {
+                object obj = ResourceManager.GetObject("se5", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

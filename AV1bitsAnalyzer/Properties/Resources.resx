@@ -127,6 +127,9 @@
   <data name="av1_logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\av1-logo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="axb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\axb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="BuildDate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\BuildDate.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;gb2312</value>
   </data>
@@ -136,7 +139,13 @@
   <data name="dialpad" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\dialpad.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="ivf" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ivf.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="refresh" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\refresh.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="se5" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\se5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
