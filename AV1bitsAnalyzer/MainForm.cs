@@ -32,7 +32,7 @@ namespace AV1bitsAnalyzer
         private OBPAnalyzerContext _decodeContext;
         private readonly List<FramesInfo> _frames = [];
         private string? _parseFilePath;
-        private string _MainFrameTextDefault = "MainForm";
+        private string _MainFrameTextDefault = $"MainForm {Resources.AppVersion} ";
         private bool _expand = true;
 
         public MainForm ()
