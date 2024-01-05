@@ -71,7 +71,7 @@ namespace AV1bitsAnalyzer.Properties {
         }
         
         /// <summary>
-        ///   查找类似 v0.2 的本地化字符串。
+        ///   查找类似 v0.3 的本地化字符串。
         /// </summary>
         internal static string AppVersion {
             get {
@@ -100,7 +100,7 @@ namespace AV1bitsAnalyzer.Properties {
         }
         
         /// <summary>
-        ///   查找类似 2024/01/04 10:45:41.93 
+        ///   查找类似 2024/01/05 11:09:31.24 
         /// 的本地化字符串。
         /// </summary>
         internal static string BuildDate {
