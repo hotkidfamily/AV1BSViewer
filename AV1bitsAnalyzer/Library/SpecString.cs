@@ -4,129 +4,109 @@ namespace AV1bitsAnalyzer.Library
 {
     internal class SpecString
     {
-        public static string[] ToMetadataStrings (OBUMetadata v)
-        {
-            string[] strings = [
-                "MetaData",
-                $"metadata_type = ${v.metadata_type}",
-                $"metadata_hdr_cll = ${v.metadata_hdr_cll}",
-                $"metadata_hdr_mdcv = ${v.metadata_hdr_mdcv}",
-                $"metadata_scalability = ${v.metadata_scalability}",
-                $"metadata_itut_t35 = ${v.metadata_itut_t35}",
-                $"metadata_timecode = ${v.metadata_timecode}",
-                $"unregistered = ${v.unregistered}",
-            ];
-            return strings;
-        }
-
         public static string ToFrameHeaderString(OBUFrameHeader v, OBUSequenceHeader h)
         {
-            StringBuilder sb = new();
-
             bool FrameIsIntra = v.frame_type == OBUFrameType.OBU_INTRA_ONLY_FRAME || v.frame_type == OBUFrameType.OBU_KEY_FRAME;
 
-            sb.Append($"FrameHeader\r\n");
-
-            sb.Append($" |- show_existing_frame = {v.show_existing_frame}\r\n");
-           // if ( v.show_existing_frame )
+            StringBuilder sb = new();
+            sb.Append($"FrameHeader");
+            sb.Append($"\r\n |- show_existing_frame = {v.show_existing_frame}");
+            // if ( v.show_existing_frame )
             {
-                sb.Append($"  |- frame_to_show_map_idx = {v.frame_to_show_map_idx}\r\n");
+                sb.Append($"\r\n    - frame_to_show_map_idx = {v.frame_to_show_map_idx}");
             }
             if ( h.decoder_model_info_present_flag && !h.timing_info.equal_picture_interval )
             {
-                //sb.Append($"if( h.decoder_model_info_present_flag && !h.timing_info.equal_picture_interval)\r\n");
-                sb.Append($" |- temporal_point_info\r\n");
-                sb.Append($"     - ( {v.temporal_point_info.ToString()} )\r\n");
+                sb.Append($"\r\n |- temporal_point_info");
+                sb.Append($"\r\n    - ( {v.temporal_point_info.ToString()} )");
             }
             if ( h.frame_id_numbers_present_flag )
             {
-                sb.Append($" |- display_frame_id = {v.display_frame_id}\r\n");
+                sb.Append($"\r\n |- display_frame_id = {v.display_frame_id}");
             }
-            sb.Append($" |- frame_type = {v.frame_type}\r\n");
-            sb.Append($" |- show_frame = {v.show_frame}\r\n");
-            sb.Append($" |- showable_frame = {v.showable_frame}\r\n");
-            bool error_resilient_mode = v.error_resilient_mode;
-            if ( v.frame_type == OBUFrameType.OBU_SWITCH_FRAME || (v.frame_type == OBUFrameType.OBU_KEY_FRAME && v.show_frame) )
-                error_resilient_mode = true;
-            sb.Append($" |- error_resilient_mode = {error_resilient_mode}\r\n");
-            sb.Append($" |- disable_cdf_update = {v.disable_cdf_update}\r\n");
-            sb.Append($" |- allow_screen_content_tools = {v.allow_screen_content_tools}\r\n");
+            sb.Append($"\r\n |- frame_type = {v.frame_type}");
+            sb.Append($"\r\n |- show_frame = {v.show_frame}");
+            sb.Append($"\r\n |- showable_frame = {v.showable_frame}");
+            sb.Append($"\r\n |- error_resilient_mode = {v.error_resilient_mode}");
+            sb.Append($"\r\n |- disable_cdf_update = {v.disable_cdf_update}");
+            sb.Append($"\r\n |- allow_screen_content_tools = {v.allow_screen_content_tools}");
             if ( FrameIsIntra )
-                sb.Append($" |- force_integer_mv = {v.force_integer_mv}\r\n");
-            sb.Append($" |- current_frame_id = {v.current_frame_id}\r\n");
-            sb.Append($" |- frame_size_override_flag = {v.frame_size_override_flag}\r\n");
-            sb.Append($" |- order_hint = {v.order_hint}\r\n");
+                sb.Append($"\r\n |- force_integer_mv = {v.force_integer_mv}");
+            sb.Append($"\r\n |- current_frame_id = {v.current_frame_id}");
+            sb.Append($"\r\n |- frame_size_override_flag = {v.frame_size_override_flag}");
+            sb.Append($"\r\n |- order_hint = {v.order_hint}");
 
             var primary_ref_frame = v.primary_ref_frame;
             if ( FrameIsIntra || v.error_resilient_mode )
             {
                 primary_ref_frame = 0;
             }
-            sb.Append($" |- primary_ref_frame = {primary_ref_frame}\r\n");
+            sb.Append($"\r\n |- primary_ref_frame = {primary_ref_frame}");
 
             if ( h.decoder_model_info_present_flag )
             {
-                sb.Append($" |- buffer_removal_time_present_flag = {v.buffer_removal_time_present_flag}\r\n");
+                sb.Append($"\r\n |- buffer_removal_time_present_flag = {v.buffer_removal_time_present_flag}");
                 if ( v.buffer_removal_time_present_flag )
                 {
-                    sb.Append($"    - buffer_removal_time  = {TypeToString.UintArray(v.buffer_removal_time)}\r\n");
+                    sb.Append($"\r\n    - buffer_removal_time  = {TypeToString.UintArray(v.buffer_removal_time)}");
                 }
             }
 
-            sb.Append($" |- refresh_frame_flags = {v.refresh_frame_flags}\r\n");
-            sb.Append($" |- ref_order_hint = {TypeToString.ByteArray(v.ref_order_hint)}\r\n");
-            sb.Append($" |- frame_width_minus_1 = {v.frame_width_minus_1}\r\n");
-            sb.Append($" |- frame_height_minus_1 = {v.frame_height_minus_1}\r\n");
-            sb.Append($" |- superres_params = {v.superres_params}\r\n");
-            sb.Append($" |- render_and_frame_size_different = {v.render_and_frame_size_different}\r\n");
-            sb.Append($" |- render_width_minus_1 = {v.render_width_minus_1}\r\n");
-            sb.Append($" |- render_height_minus_1 = {v.render_height_minus_1}\r\n");
-            sb.Append($" |- RenderWidth = {v.RenderWidth}\r\n");
-            sb.Append($" |- RenderHeight = {v.RenderHeight}\r\n");
+            sb.Append($"\r\n |- refresh_frame_flags = {v.refresh_frame_flags}");
+            sb.Append($"\r\n |- ref_order_hint = {TypeToString.ByteArray(v.ref_order_hint)}");
+            sb.Append($"\r\n |- frame_width_minus_1 = {v.frame_width_minus_1}");
+            sb.Append($"\r\n |- frame_height_minus_1 = {v.frame_height_minus_1}");
+            sb.Append($"\r\n |- superres_params = {v.superres_params}");
+            sb.Append($"\r\n |- render_and_frame_size_different = {v.render_and_frame_size_different}");
+            sb.Append($"\r\n |- render_width_minus_1 = {v.render_width_minus_1}");
+            sb.Append($"\r\n |- render_height_minus_1 = {v.render_height_minus_1}");
+            sb.Append($"\r\n |- RenderWidth = {v.RenderWidth}");
+            sb.Append($"\r\n |- RenderHeight = {v.RenderHeight}");
             if ( FrameIsIntra )
             {
-                sb.Append($" |- allow_intrabc = {v.allow_intrabc}\r\n");
+                sb.Append($"\r\n |- allow_intrabc = {v.allow_intrabc}");
             }
             else
             {
                 if ( !h.enable_order_hint )
                 {
-                    sb.Append($" |- frame_refs_short_signaling = 0\r\n");
+                    sb.Append($"\r\n |- frame_refs_short_signaling = 0");
                 }
                 else
                 {
-                    sb.Append($" |- frame_refs_short_signaling = {v.frame_refs_short_signaling}\r\n");
+                    sb.Append($"\r\n |- frame_refs_short_signaling = {v.frame_refs_short_signaling}");
                     if ( v.frame_refs_short_signaling )
                     {
-                        sb.Append($" |- last_frame_idx = {v.last_frame_idx}\r\n");
-                        sb.Append($" L gold_frame_idx = {v.gold_frame_idx}\r\n");
+                        sb.Append($"\r\n |- last_frame_idx = {v.last_frame_idx}");
+                        sb.Append($"\r\n |_ gold_frame_idx = {v.gold_frame_idx}");
                     }
 
-                    sb.Append($" |- ref_frame_idx = {TypeToString.ByteArray(v.ref_frame_idx)}\r\n");
-                    sb.Append($" |- delta_frame_id_minus_1 = {TypeToString.ByteArray(v.delta_frame_id_minus_1)}\r\n");
+                    sb.Append($"\r\n |- ref_frame_idx = {TypeToString.ByteArray(v.ref_frame_idx)}");
+                    sb.Append($"\r\n |- delta_frame_id_minus_1 = {TypeToString.ByteArray(v.delta_frame_id_minus_1)}");
                 }
             }
-            sb.Append($" |- found_ref = {v.found_ref}\r\n");
-            sb.Append($" |- allow_high_precision_mv = {v.allow_high_precision_mv}\r\n");
-            sb.Append($" |- interpolation_filter = {v.interpolation_filter}\r\n");
-            sb.Append($" |- is_motion_mode_switchable = {v.is_motion_mode_switchable}\r\n");
-            sb.Append($" |- use_ref_frame_mvs = {v.use_ref_frame_mvs}\r\n");
-            sb.Append($" |- disable_frame_end_update_cdf = {v.disable_frame_end_update_cdf}\r\n");
-            sb.Append($" |- tile_info = {v.tile_info}\r\n");
-            sb.Append($" |- quantization_params = {v.quantization_params}\r\n");
-            sb.Append($" |- segmentation_params = {v.segmentation_params}\r\n");
-            sb.Append($" |- delta_q_params = {v.delta_q_params}\r\n");
-            sb.Append($" |- delta_lf_params = {v.delta_lf_params}\r\n");
-            sb.Append($" |- loop_filter_params = {v.loop_filter_params}\r\n");
-            sb.Append($" |- cdef_params = {v.cdef_params}\r\n");
-            sb.Append($" |- lr_params = {v.lr_params}\r\n");
-            sb.Append($" |- tx_mode_select = {v.tx_mode_select}\r\n");
-            sb.Append($" |- skip_mode_present = {v.skip_mode_present}\r\n");
-            sb.Append($" |- reference_select = {v.reference_select}\r\n");
-            sb.Append($" |- allow_warped_motion = {v.allow_warped_motion}\r\n");
-            sb.Append($" |- reduced_tx_set = {v.reduced_tx_set}\r\n");
-            sb.Append($" |- global_motion_params = {v.global_motion_params}\r\n");
-            sb.Append($" |- film_grain_params = {v.film_grain_params}\r\n");
+            sb.Append($"\r\n |- found_ref = {v.found_ref}");
+            sb.Append($"\r\n |- allow_high_precision_mv = {v.allow_high_precision_mv}");
+            sb.Append($"\r\n |- interpolation_filter = {v.interpolation_filter}");
+            sb.Append($"\r\n |- is_motion_mode_switchable = {v.is_motion_mode_switchable}");
+            sb.Append($"\r\n |- use_ref_frame_mvs = {v.use_ref_frame_mvs}");
+            sb.Append($"\r\n |- disable_frame_end_update_cdf = {v.disable_frame_end_update_cdf}");
+            sb.Append($"\r\n |- tile_info = {v.tile_info}");
+            sb.Append($"\r\n |- quantization_params = {v.quantization_params}");
+            sb.Append($"\r\n |- segmentation_params = {v.segmentation_params}");
+            sb.Append($"\r\n |- delta_q_params = {v.delta_q_params}");
+            sb.Append($"\r\n |- delta_lf_params = {v.delta_lf_params}");
+            sb.Append($"\r\n |- loop_filter_params = {v.loop_filter_params}");
+            sb.Append($"\r\n |- cdef_params = {v.cdef_params}");
+            sb.Append($"\r\n |- lr_params = {v.lr_params}");
+            sb.Append($"\r\n |- tx_mode_select = {v.tx_mode_select}");
+            sb.Append($"\r\n |- skip_mode_present = {v.skip_mode_present}");
+            sb.Append($"\r\n |- reference_select = {v.reference_select}");
+            sb.Append($"\r\n |- allow_warped_motion = {v.allow_warped_motion}");
+            sb.Append($"\r\n |- reduced_tx_set = {v.reduced_tx_set}");
+            sb.Append($"\r\n |- global_motion_params = {v.global_motion_params}");
+            sb.Append($"\r\n |- film_grain_params = {v.film_grain_params}");
+
 
             return sb.ToString();
         }
@@ -135,132 +115,132 @@ namespace AV1bitsAnalyzer.Library
         {
             StringBuilder sb = new();
 
-            sb.Append($"SequenceHeader\r\n");
-            sb.Append($" |- seq_profile = {v.seq_profile}\r\n");
-            sb.Append($" |- still_picture = {v.still_picture}\r\n");
-            sb.Append($" |- reduced_still_picture_v = {v.reduced_still_picture_header}\r\n");
-            if(v.reduced_still_picture_header)
+            sb.Append($"SequenceHeader");
+            sb.Append($"\r\n |- seq_profile = {v.seq_profile}");
+            sb.Append($"\r\n |- still_picture = {v.still_picture}");
+            sb.Append($"\r\n |- reduced_still_picture_v = {v.reduced_still_picture_header}");
+            if ( v.reduced_still_picture_header )
             {
-                sb.Append($" |- timing_info_present_flag = {v.timing_info_present_flag}\r\n");
-                sb.Append($" |- decoder_model_info_present_flag = {v.decoder_model_info_present_flag}\r\n");
-                sb.Append($" |- initial_display_delay_present_flag = {v.initial_display_delay_present_flag}\r\n");
-                sb.Append($" |- operating_points_cnt_minus_1 = {v.operating_points_cnt_minus_1}\r\n");
-                sb.Append($" |- operating_point_idc = {v.operating_point_idc[0]}\r\n");
-                sb.Append($" |- seq_level_idx = {v.seq_level_idx[0]}\r\n");
-                sb.Append($" |- seq_level_idx = {v.seq_level_idx[0]}\r\n");
-                sb.Append($" |- seq_tier = {v.seq_tier[0]}\r\n");
-                sb.Append($" |- decoder_model_present_for_this_op = {v.decoder_model_present_for_this_op[0]}\r\n");
-                sb.Append($" |- initial_display_delay_present_for_this_op = {v.initial_display_delay_present_for_this_op[0]}\r\n");
+                sb.Append($"\r\n |- timing_info_present_flag = {v.timing_info_present_flag}");
+                sb.Append($"\r\n |- decoder_model_info_present_flag = {v.decoder_model_info_present_flag}");
+                sb.Append($"\r\n |- initial_display_delay_present_flag = {v.initial_display_delay_present_flag}");
+                sb.Append($"\r\n |- operating_points_cnt_minus_1 = {v.operating_points_cnt_minus_1}");
+                sb.Append($"\r\n |- operating_point_idc = {v.operating_point_idc[0]}");
+                sb.Append($"\r\n |- seq_level_idx = {v.seq_level_idx[0]}");
+                sb.Append($"\r\n |- seq_level_idx = {v.seq_level_idx[0]}");
+                sb.Append($"\r\n |- seq_tier = {v.seq_tier[0]}");
+                sb.Append($"\r\n |- decoder_model_present_for_this_op = {v.decoder_model_present_for_this_op[0]}");
+                sb.Append($"\r\n |- initial_display_delay_present_for_this_op = {v.initial_display_delay_present_for_this_op[0]}");
             }
             else
             {
-                sb.Append($" |- timing_info_present_flag = {v.timing_info_present_flag}\r\n");
+                sb.Append($"\r\n |- timing_info_present_flag = {v.timing_info_present_flag}");
                 if ( v.timing_info_present_flag )
                 {
-                    sb.Append($"   - timing_info = ( {v.timing_info.ToString()} )\r\n");
+                    sb.Append($"\r\n   - timing_info = ( {v.timing_info.ToString()} )");
                 }
 
-                sb.Append($" |- decoder_model_info_present_flag = {v.decoder_model_info_present_flag}\r\n");
+                sb.Append($"\r\n |- decoder_model_info_present_flag = {v.decoder_model_info_present_flag}");
                 if ( v.decoder_model_info_present_flag )
-                    sb.Append($"   - decoder_model_info = ( {v.decoder_model_info.ToString()} )\r\n");
+                    sb.Append($"\r\n   - decoder_model_info = ( {v.decoder_model_info.ToString()} )");
 
-                sb.Append($" |- initial_display_delay_present_flag = {v.initial_display_delay_present_flag}\r\n");
-                sb.Append($" |- operating_points_cnt_minus_1 = {v.operating_points_cnt_minus_1}\r\n");
-                for(var i= 0; i <= v.operating_points_cnt_minus_1; i++ )
+                sb.Append($"\r\n |- initial_display_delay_present_flag = {v.initial_display_delay_present_flag}");
+                sb.Append($"\r\n |- operating_points_cnt_minus_1 = {v.operating_points_cnt_minus_1}");
+                for ( var i = 0; i <= v.operating_points_cnt_minus_1; i++ )
                 {
-                    sb.Append($" |- operating_point_idc = {v.operating_point_idc[i]}\r\n");
+                    sb.Append($"\r\n    - operating_point_idc = {v.operating_point_idc[i]}");
                     var level = v.seq_level_idx[i];
-                    sb.Append($" |- seq_level_idx = {level}\r\n");
+                    sb.Append($"\r\n    - seq_level_idx = {level}");
                     bool seq_tier = v.seq_tier[i];
-                    if (level < 7 )
+                    if ( level < 7 )
                     {
                         seq_tier = false;
                     }
-                    sb.Append($" |- seq_tier = {seq_tier}\r\n");
+                    sb.Append($"\r\n    - seq_tier = {seq_tier}");
                     if ( v.decoder_model_info_present_flag )
                     {
-                        sb.Append($" |- decoder_model_present_for_this_op = {v.decoder_model_present_for_this_op[i]}\r\n");
+                        sb.Append($"\r\n    - decoder_model_present_for_this_op = {v.decoder_model_present_for_this_op[i]}");
                         if ( v.decoder_model_present_for_this_op[i] )
                         {
-                            sb.Append($"   - operating_parameters_info = ( {v.operating_parameters_info[i]} )\r\n");
+                            sb.Append($"\r\n      - operating_parameters_info = ( {v.operating_parameters_info[i]} )");
                         }
                     }
                     if ( v.initial_display_delay_present_flag )
                     {
-                        sb.Append($" |- initial_display_delay_present_for_this_op = {v.initial_display_delay_present_for_this_op[i]}\r\n");
+                        sb.Append($"\r\n    - initial_display_delay_present_for_this_op = {v.initial_display_delay_present_for_this_op[i]}");
                         if ( v.initial_display_delay_present_for_this_op[i] )
                         {
-                            sb.Append($" |- initial_display_delay_minus_1 = {v.initial_display_delay_minus_1[i]}\r\n");
+                            sb.Append($"\r\n      - initial_display_delay_minus_1 = {v.initial_display_delay_minus_1[i]}");
                         }
                     }
                 }
 
-                sb.Append($" |- frame_width_bits_minus_1 = {v.frame_width_bits_minus_1}\r\n");
-                sb.Append($" |- frame_height_bits_minus_1 = {v.frame_height_bits_minus_1}\r\n");
-                sb.Append($" |- max_frame_width_minus_1 = {v.max_frame_width_minus_1}\r\n");
-                sb.Append($" |- max_frame_height_minus_1 = {v.max_frame_height_minus_1}\r\n");
-                sb.Append($" |- frame_id_numbers_present_flag = {v.frame_id_numbers_present_flag}\r\n");
-                if( v.frame_id_numbers_present_flag )
+                sb.Append($"\r\n |- frame_width_bits_minus_1 = {v.frame_width_bits_minus_1}");
+                sb.Append($"\r\n |- frame_height_bits_minus_1 = {v.frame_height_bits_minus_1}");
+                sb.Append($"\r\n |- max_frame_width_minus_1 = {v.max_frame_width_minus_1}");
+                sb.Append($"\r\n |- max_frame_height_minus_1 = {v.max_frame_height_minus_1}");
+                sb.Append($"\r\n |- frame_id_numbers_present_flag = {v.frame_id_numbers_present_flag}");
+                if ( v.frame_id_numbers_present_flag )
                 {
-                    sb.Append($"    - delta_frame_id_length_minus_2 = {v.delta_frame_id_length_minus_2}\r\n");
-                    sb.Append($"    - additional_frame_id_length_minus_1 = {v.additional_frame_id_length_minus_1}\r\n");
+                    sb.Append($"\r\n    - delta_frame_id_length_minus_2 = {v.delta_frame_id_length_minus_2}");
+                    sb.Append($"\r\n    - additional_frame_id_length_minus_1 = {v.additional_frame_id_length_minus_1}");
                 }
-                sb.Append($" |- use_128x128_superblock = {v.use_128x128_superblock}\r\n");
-                sb.Append($" |- enable_filter_intra = {v.enable_filter_intra}\r\n");
-                sb.Append($" |- enable_intra_edge_filter = {v.enable_intra_edge_filter}\r\n");
-                if( v.reduced_still_picture_header )
+                sb.Append($"\r\n |- use_128x128_superblock = {v.use_128x128_superblock}");
+                sb.Append($"\r\n |- enable_filter_intra = {v.enable_filter_intra}");
+                sb.Append($"\r\n |- enable_intra_edge_filter = {v.enable_intra_edge_filter}");
+                if ( v.reduced_still_picture_header )
                 {
-                    sb.Append($" |- enable_interintra_compound = {v.enable_interintra_compound}\r\n");
-                    sb.Append($" |- enable_masked_compound = {v.enable_masked_compound}\r\n");
-                    sb.Append($" |- enable_warped_motion = {v.enable_warped_motion}\r\n");
-                    sb.Append($" |- enable_dual_filter = {v.enable_dual_filter}\r\n");
-                    sb.Append($" |- enable_order_hint = {v.enable_order_hint}\r\n");
-                    sb.Append($" |- enable_jnt_comp = {v.enable_jnt_comp}\r\n");
-                    sb.Append($" |- enable_ref_frame_mvs = {v.enable_ref_frame_mvs}\r\n");
-                    sb.Append($" |- seq_force_screen_content_tools = {v.seq_force_screen_content_tools}\r\n");
-                    sb.Append($" |- seq_force_integer_mv = {v.seq_force_integer_mv}\r\n");
-                    sb.Append($" |- OrderHintBits = {v.OrderHintBits}\r\n");
+                    sb.Append($"\r\n |- enable_interintra_compound = {v.enable_interintra_compound}");
+                    sb.Append($"\r\n |- enable_masked_compound = {v.enable_masked_compound}");
+                    sb.Append($"\r\n |- enable_warped_motion = {v.enable_warped_motion}");
+                    sb.Append($"\r\n |- enable_dual_filter = {v.enable_dual_filter}");
+                    sb.Append($"\r\n |- enable_order_hint = {v.enable_order_hint}");
+                    sb.Append($"\r\n |- enable_jnt_comp = {v.enable_jnt_comp}");
+                    sb.Append($"\r\n |- enable_ref_frame_mvs = {v.enable_ref_frame_mvs}");
+                    sb.Append($"\r\n |- seq_force_screen_content_tools = {v.seq_force_screen_content_tools}");
+                    sb.Append($"\r\n |- seq_force_integer_mv = {v.seq_force_integer_mv}");
+                    sb.Append($"\r\n |- OrderHintBits = {v.OrderHintBits}");
                 }
                 else
                 {
-                    sb.Append($" |- enable_interintra_compound = {v.enable_interintra_compound}\r\n");
-                    sb.Append($" |- enable_masked_compound = {v.enable_masked_compound}\r\n");
-                    sb.Append($" |- enable_warped_motion = {v.enable_warped_motion}\r\n");
-                    sb.Append($" |- enable_dual_filter = {v.enable_dual_filter}\r\n");
-                    sb.Append($" |- enable_order_hint = {v.enable_order_hint}\r\n");
-                    sb.Append($"   - enable_jnt_comp = {v.enable_jnt_comp}\r\n");
-                    sb.Append($"   - enable_ref_frame_mvs = {v.enable_ref_frame_mvs}\r\n");
-                    sb.Append($" |- seq_choose_screen_content_tools = {v.seq_choose_screen_content_tools}\r\n");
+                    sb.Append($"\r\n |- enable_interintra_compound = {v.enable_interintra_compound}");
+                    sb.Append($"\r\n |- enable_masked_compound = {v.enable_masked_compound}");
+                    sb.Append($"\r\n |- enable_warped_motion = {v.enable_warped_motion}");
+                    sb.Append($"\r\n |- enable_dual_filter = {v.enable_dual_filter}");
+                    sb.Append($"\r\n |- enable_order_hint = {v.enable_order_hint}");
+                    sb.Append($"\r\n   - enable_jnt_comp = {v.enable_jnt_comp}");
+                    sb.Append($"\r\n   - enable_ref_frame_mvs = {v.enable_ref_frame_mvs}");
+                    sb.Append($"\r\n |- seq_choose_screen_content_tools = {v.seq_choose_screen_content_tools}");
 
-                    if( v.seq_choose_screen_content_tools > 0 )
+                    if ( v.seq_choose_screen_content_tools > 0 )
                     {
-                        sb.Append($"   - seq_force_screen_content_tools = SELECT_SCREEN_CONTENT_TOOLS\r\n");
+                        sb.Append($"\r\n   - seq_force_screen_content_tools = SELECT_SCREEN_CONTENT_TOOLS");
                     }
                     else if ( v.seq_force_screen_content_tools > 0 )
                     {
-                        sb.Append($"   - seq_force_screen_content_tools = {v.seq_force_screen_content_tools}\r\n");
-                        sb.Append($"      - seq_choose_integer_mv = {v.seq_choose_integer_mv}\r\n");
+                        sb.Append($"\r\n   - seq_force_screen_content_tools = {v.seq_force_screen_content_tools}");
+                        sb.Append($"\r\n      - seq_choose_integer_mv = {v.seq_choose_integer_mv}");
                         if ( v.seq_choose_integer_mv > 0 )
                         {
-                            sb.Append($"        - seq_force_integer_mv = SELECT_INTEGER_MV\r\n");
+                            sb.Append($"\r\n        - seq_force_integer_mv = SELECT_INTEGER_MV");
                         }
                         else
                         {
-                            sb.Append($"        - seq_force_integer_mv = {v.seq_force_integer_mv}\r\n");
+                            sb.Append($"\r\n        - seq_force_integer_mv = {v.seq_force_integer_mv}");
                         }
                     }
 
                     if ( v.enable_order_hint )
                     {
-                        sb.Append($"   - order_hint_bits_minus_1 = {v.order_hint_bits_minus_1}\r\n");
-                        sb.Append($"   - OrderHintBits = {v.OrderHintBits}\r\n");
+                        sb.Append($"\r\n   - order_hint_bits_minus_1 = {v.order_hint_bits_minus_1}");
+                        sb.Append($"\r\n   - OrderHintBits = {v.OrderHintBits}");
                     }
                 }
-                sb.Append($" |- enable_superres = {v.enable_superres}\r\n");
-                sb.Append($" |- enable_cdef = {v.enable_cdef}\r\n");
-                sb.Append($" |- enable_restoration = {v.enable_restoration}\r\n");
-                sb.Append($" |- color_config = {v.color_config.ToString()}\r\n");
-                sb.Append($" |_ film_grain_params_present = {v.film_grain_params_present}\r\n");
+                sb.Append($"\r\n |- enable_superres = {v.enable_superres}");
+                sb.Append($"\r\n |- enable_cdef = {v.enable_cdef}");
+                sb.Append($"\r\n |- enable_restoration = {v.enable_restoration}");
+                sb.Append($"\r\n |- color_config = {v.color_config.ToString()}");
+                sb.Append($"\r\n |_ film_grain_params_present = {v.film_grain_params_present}");
             }
 
             return sb.ToString();

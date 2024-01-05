@@ -1,4 +1,6 @@
-﻿namespace AV1bitsAnalyzer.Library
+﻿using System.Security.Policy;
+
+namespace AV1bitsAnalyzer.Library
 {
     public delegate void FrameCallbackHandle (ref FramesInfo v);
     public enum ParseType {
@@ -6,34 +8,48 @@
         ParseType_OBU_Section5,
         ParseType_OBU_AnnexB,
     }
-    public class FramesInfo
+
+    struct OBU
     {
-        long address;
         OBUType type;
-        long offset;
+        int obuOffset;
+        int obuDataOffset;
         int size;
         int tid;
         int sid;
-        byte[]? data;
+
+        public OBUType Type { readonly get => type; set => type = value; }
+        public int ObuOffset { readonly get => obuOffset; set => obuOffset = value; }
+        public int Size { readonly get => size; set => size = value; }
+        public int Tid { readonly get => tid; set => tid = value; }
+        public int Sid { readonly get => sid; set => sid = value; }
+        public int ObuDataOffset { get => obuDataOffset; set => obuDataOffset = value; }
+
+        public string [] Strings ()
+        {
+            return [$"{Type}", $"{ObuOffset}", $"{Size}", $"{Tid}", $"{Sid}"];
+        }
+    }
+    public class FramesInfo
+    {
+        int frameIdx = 0;
+        string frametype = string.Empty;
+        long address;
+        List<OBU> obus = [];
+        byte[] data = [];
 
         float progress;
-        string pkgType = "-";
-        string pktHeader = string.Empty;
 
         public long Address { get => address; set => address = value; }
-        public OBUType Type { get => type; set => type = value; }
-        public long Offset { get => offset; set => offset = value; }
-        public int Size { get => size; set => size = value; }
-        public int Tid { get => tid; set => tid = value; }
-        public int Sid { get => sid; set => sid = value; }
-        public byte[]? Data { get => data; set => data = value; }
+        public byte[] Data { get => data; set => data = value; }
         public float Progress { get => progress; set => progress = value; }
-        public string Pkgtype { get => pkgType; set => pkgType = value; }
-        public string PkgHeader { get => pktHeader; set => pktHeader = value; }
+        public int FrameIdx { get => frameIdx; set => frameIdx = value; }
+        public string Frametype { get => frametype; set => frametype = value; }
+        internal List<OBU> Obus { get => obus; set => obus = value; }
 
-        public string[] Info ()
+        public override string ToString ()
         {
-            return [$"{Address:X8}", $"{Offset}", $"{Type}", $"{Size}", $"{Tid}", $"{Sid}", $"{Pkgtype}"];
+            return $"Frame {FrameIdx:D8} @ {Address:X8}         {Frametype}     {Data.Length} ";
         }
     }
 
@@ -74,13 +90,11 @@
             using var fs = new FileStream(name, FileMode.Open, FileAccess.Read, FileShare.Read);
             using var reader = new BinaryReader(fs);
             long fsLength = fs.Length;
-            long offset = 0;
-            int tid = 0, sid = 0, size = 0;
             OBPError error = new();
             OBUType obuType = 0;
 
             consumerLength = 0x20; // skip ivf header
-            int readLength = 12;
+            int readLength = 12, frameIdx = 0;
 
             while ( !_exit && consumerLength < fsLength )
             {
@@ -98,11 +112,20 @@
                 }
 
                 var v = reader.ReadBytes((int)packetSize);
-
                 var s = new Span<byte>(v);
 
-                offset = 0;
+                int tid = 0, sid = 0, size = 0;
 
+                FramesInfo info = new()
+                {
+                    Address = consumerLength,
+                    Data = v,
+                    FrameIdx = frameIdx++,
+                    Progress = consumerLength * 1.0f / fsLength,
+                };
+                List<OBU> Obus = info.Obus;
+
+                long offset = 0;
                 long pLength = 0;
                 while ( pLength < s.Length )
                 {
@@ -112,23 +135,22 @@
                         pLength = s.Length;
                         break;
                     }
-
-                    var add = consumerLength  + pLength;
-                    FramesInfo info = new()
+                    int obulen = (int)offset + size;
+                    OBU oBU = new ()
                     {
-                        Address = add,
                         Type = obuType,
-                        Offset = offset,
-                        Size = size,
-                        Tid = tid,
+                        ObuOffset = (int)pLength,
+                        ObuDataOffset = (int)offset,
                         Sid = sid,
-                        Data = s.Slice((int)pLength,(int)offset+size).ToArray(),
-                        Progress = add*1.0f / fsLength,
+                        Tid = tid,
+                        Size = size,
                     };
+                    Obus.Add(oBU);
 
-                    _callback?.Invoke(ref info);
-                    pLength += offset + size;
+                    pLength += obulen;
                 }
+                _callback?.Invoke(ref info);
+
                 consumerLength += pLength;
             }
 
@@ -155,7 +177,7 @@
             int readLength = 12;
             long fs_reader_Length = 0;
             long offset = 0;
-            int tid = 0, sid = 0, size = 0;
+            int tid = 0, sid = 0, size = 0, frameIdx = 0;
 
             while ( !_exit && fs_reader_Length < fsLength )
             {
@@ -168,10 +190,20 @@
 
                 int readLen = (int)Math.Min(value, (ulong)fsLength);
                 reader.BaseStream.Position = fs_reader_Length;
-                readArray = reader.ReadBytes((int) readLen);
+                readArray = reader.ReadBytes(readLen);
 
                 int temporal_unit_size = Math.Min((int) value, readArray.Length);
                 var temporalSpan = new Span<byte>(readArray);
+
+                FramesInfo info = new()
+                {
+                    Address = fs_reader_Length,
+                    Data = readArray,
+                    FrameIdx = frameIdx ++,
+                    Progress = fs_reader_Length*1.0f / fsLength,
+                };
+                var obus = info.Obus;
+
                 long temporal_parse_length = 0;
                 while ( temporal_parse_length < temporal_unit_size )
                 {
@@ -192,27 +224,19 @@
                         if ( obu_length >= 0 )
                         {
                             var res = ObuOperator.ObpGetNextObu(frameSpan[(int)frame_parse_length..], out obuType, out offset, out size, out tid, out sid, ref error);
-                            if ( res < 0 )
-                            {
-                                break;
-                            }
-                            var valid = ObuOperator.ObpIsValidObu(obuType);
-                            if ( valid )
-                            {
-                                var add = fs_reader_Length + temporal_parse_length + frame_parse_length;
-                                FramesInfo info = new()
-                                {
-                                    Address = add,
-                                    Type = obuType,
-                                    Offset = offset,
-                                    Size = (int)(obu_length - offset),
-                                    Tid = tid,
-                                    Sid = sid,
-                                    Data = frameSpan.Slice((int) frame_parse_length, (int) obu_length).ToArray(),
-                                    Progress = add*1.0f / fsLength,
-                                };
 
-                                _callback?.Invoke(ref info);
+                            if ( res >= 0 && ObuOperator.ObpIsValidObu(obuType))
+                            {
+                                OBU oBU = new ()
+                                {
+                                    Type = obuType,
+                                    ObuOffset = (int)(temporal_parse_length + frame_parse_length),
+                                    ObuDataOffset = (int)offset,
+                                    Sid = sid,
+                                    Tid = tid,
+                                    Size = (int)obu_length,
+                                };
+                                obus.Add(oBU);
                             }
                         }
                         else
@@ -224,6 +248,7 @@
                     }
                     temporal_parse_length += frame_unit_size;
                 }
+                _callback?.Invoke(ref info);
                 fs_reader_Length += temporal_parse_length;
             }
 
@@ -242,45 +267,95 @@
             using var reader = new BinaryReader(fs);
 
             long fsLength = reader.BaseStream.Length;
+            List<OBU> rawObus = [];
 
-            long offset = 0;
-            int tid = 0, sid = 0, size = 0;
-            OBPError error = new();
-            OBUType obuType = 0;
-            int readLength = 12;
-            long fs_reader_Length = 0;
-            while ( !_exit && fs_reader_Length < fsLength )
             {
-                reader.BaseStream.Position = fs_reader_Length;
-                var header = reader.ReadBytes(readLength);
-                if ( header.Length < 2 )
+                int readLength = 12, pre_frame_size = 0;
+                long fs_reader_Length = 0;
+                while ( !_exit && fs_reader_Length < fsLength )
                 {
-                    break;
-                }
-                var s = new Span<byte>(header);
-                var res = ObuOperator.ObpGetNextObu(s, out obuType, out offset, out size, out tid, out sid, ref error);
-                if ( res < 0 )
-                {
-                    break;
-                }
+                    reader.BaseStream.Position = fs_reader_Length;
+                    var header = reader.ReadBytes(readLength);
+                    if ( header.Length < 2 )
+                    {
+                        break;
+                    }
 
+                    long offset = 0;
+                    int tid = 0, sid = 0, size = 0;
+                    OBPError error = new();
+                    OBUType obuType = 0;
+
+                    var s = new Span<byte>(header);
+                    var res = ObuOperator.ObpGetNextObu(s, out obuType, out offset, out size, out tid, out sid, ref error);
+                    if ( res < 0 )
+                    {
+                        break;
+                    }
+
+                    if ( obuType == OBUType.OBU_TEMPORAL_DELIMITER )
+                    {
+                        pre_frame_size = 0;
+                    }
+
+                    long frame_size = offset + size;
+
+                    OBU oBU = new ()
+                    {
+                        Type = obuType,
+                        ObuOffset = pre_frame_size,
+                        ObuDataOffset = (int)offset,
+                        Sid = sid,
+                        Tid = tid,
+                        Size = size,
+                    };
+                    pre_frame_size += (int) frame_size;
+                    rawObus.Add(oBU);
+
+                    fs_reader_Length += frame_size;
+                }
+            }
+
+            {
+                int frameIdx = 0;
+                long fs_reader_Length = 0;
                 reader.BaseStream.Position = fs_reader_Length;
-                long obuSize = offset + size;
-                var data = reader.ReadBytes((int)obuSize);
+
                 FramesInfo info = new()
                 {
                     Address = fs_reader_Length,
-                    Type = obuType,
-                    Offset = offset,
-                    Size = size,
-                    Tid = tid,
-                    Sid = sid,
-                    Data = data,
-                    Progress = fs_reader_Length*1.0f / fsLength,
+                    FrameIdx = frameIdx++,
+                    Progress = fs_reader_Length * 1.0f / fsLength,
                 };
+                var obus = info.Obus;
+                var zero = rawObus.ElementAt(0);
+                int frame_length = zero.ObuDataOffset + zero.Size;
+                obus.Add(zero);
+                rawObus.Remove(zero);
 
-                _callback?.Invoke(ref info);
-                fs_reader_Length += obuSize;
+                foreach ( var obu in rawObus )
+                {
+                    if ( obu.Type == OBUType.OBU_TEMPORAL_DELIMITER )
+                    {
+                        var d = reader.ReadBytes(frame_length);
+                        info.Data = d;
+                        _callback?.Invoke(ref info);
+
+                        fs_reader_Length += frame_length;
+                        
+                        info = new()
+                        {
+                            Address = fs_reader_Length,
+                            FrameIdx = frameIdx++,
+                            Progress = fs_reader_Length * 1.0f / fsLength,
+                        };
+                        obus = info.Obus;
+                        frame_length = 0;
+                    }
+                    obus.Add(obu);
+                    frame_length += obu.Size + obu.ObuDataOffset;
+                }
+
             }
 
             FramesInfo end = new()

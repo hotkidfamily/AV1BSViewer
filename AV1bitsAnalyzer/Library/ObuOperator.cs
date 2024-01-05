@@ -34,7 +34,8 @@ namespace AV1bitsAnalyzer.Library
         public sbyte[,] SavedLoopFilterRefDeltas = new sbyte[8, 8];
         public sbyte[,] SavedLoopFilterModeDeltas = new sbyte[8, 8];
     }
-
+#pragma warning disable IDE0059 // 不需要赋值
+#pragma warning disable IDE0018 // 内联变量声明
     internal class ObuOperator
     {
         public static bool ObpIsValidObu (OBUType type)
@@ -1294,8 +1295,8 @@ namespace AV1bitsAnalyzer.Library
                     {
                         int n = seq.delta_frame_id_length_minus_2 + 2;
                         ObpBr(out fh.delta_frame_id_minus_1[i], ref br, n, ref err);
-                        var DeltaFrameId    = fh.delta_frame_id_minus_1[i] + 1;
-                        var expectedFrameId = ((fh.current_frame_id + (1 << idLen) - DeltaFrameId) % (1 << idLen));
+                        byte DeltaFrameId    = (byte)(fh.delta_frame_id_minus_1[i] + 1);
+                        byte expectedFrameId = (byte)((fh.current_frame_id + (1 << idLen) - DeltaFrameId) % (1 << idLen));
                         if ( context.RefFrameId[fh.ref_frame_idx[i]] != expectedFrameId )
                         {
                             return -1;
@@ -2419,4 +2420,6 @@ namespace AV1bitsAnalyzer.Library
             return 0;
         }
     }
+#pragma warning restore IDE0059 // 不需要赋值
+#pragma warning restore IDE0018 // 内联变量声明
 }

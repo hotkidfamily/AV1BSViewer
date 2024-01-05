@@ -100,7 +100,7 @@ namespace AV1bitsAnalyzer.Properties {
         }
         
         /// <summary>
-        ///   查找类似 2023/12/22 15:52:15.29 
+        ///   查找类似 2024/01/04 10:45:41.93 
         /// 的本地化字符串。
         /// </summary>
         internal static string BuildDate {
@@ -115,6 +115,26 @@ namespace AV1bitsAnalyzer.Properties {
         internal static System.Drawing.Bitmap close {
             get {
                 object obj = ResourceManager.GetObject("close", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap compress {
+            get {
+                object obj = ResourceManager.GetObject("compress", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap decompress {
+            get {
+                object obj = ResourceManager.GetObject("decompress", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

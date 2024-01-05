@@ -17,6 +17,10 @@
   </Target>
 
   <ItemGroup>
+    <Compile Remove="ListViewExtended.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Resources\av1-icon.ico" />
   </ItemGroup>
 
@@ -24,6 +28,7 @@
     <PackageReference Include="Be.Windows.Forms.HexBox.Net5" Version="1.8.0" />
     <PackageReference Include="LibVLCSharp.WinForms" Version="3.8.1" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+    <PackageReference Include="WinForms.DataVisualization" Version="1.9.1" />
   </ItemGroup>
 
   <ItemGroup>

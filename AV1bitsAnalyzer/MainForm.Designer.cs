@@ -28,6 +28,11 @@
         /// </summary>
         private void InitializeComponent ()
         {
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             tableLayoutPanel1 = new TableLayoutPanel();
             LVHexInfo = new ListView();
@@ -45,11 +50,12 @@
             BtnOpen = new Button();
             BtnClose = new Button();
             BtnReopen = new Button();
-            button4 = new Button();
+            BtnExpand = new Button();
             button5 = new Button();
             PBarLoadding = new ProgressBar();
             flowLayoutPanel2 = new FlowLayoutPanel();
             BtnFormat = new Button();
+            chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
@@ -59,6 +65,7 @@
             FlowLayoutPlayerButtons.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
             flowLayoutPanel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize) chart1).BeginInit();
             SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -71,12 +78,12 @@
             tableLayoutPanel1.Controls.Add(HexBoxDetail, 0, 1);
             tableLayoutPanel1.Controls.Add(splitContainer1, 1, 1);
             tableLayoutPanel1.Controls.Add(RBoxObu, 1, 0);
-            tableLayoutPanel1.Location = new Point(12, 69);
+            tableLayoutPanel1.Location = new Point(2, 239);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 2;
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 73.55769F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 26.4423084F));
-            tableLayoutPanel1.Size = new Size(1163, 605);
+            tableLayoutPanel1.Size = new Size(1320, 728);
             tableLayoutPanel1.TabIndex = 1;
             // 
             // LVHexInfo
@@ -87,7 +94,7 @@
             LVHexInfo.Location = new Point(3, 3);
             LVHexInfo.MultiSelect = false;
             LVHexInfo.Name = "LVHexInfo";
-            LVHexInfo.Size = new Size(826, 439);
+            LVHexInfo.Size = new Size(939, 529);
             LVHexInfo.TabIndex = 0;
             LVHexInfo.UseCompatibleStateImageBehavior = false;
             LVHexInfo.View = View.Details;
@@ -100,11 +107,11 @@
             HexBoxDetail.Font = new Font("Microsoft YaHei UI", 10F);
             HexBoxDetail.GroupSeparatorVisible = true;
             HexBoxDetail.LineInfoVisible = true;
-            HexBoxDetail.Location = new Point(3, 448);
+            HexBoxDetail.Location = new Point(3, 538);
             HexBoxDetail.Name = "HexBoxDetail";
             HexBoxDetail.ReadOnly = true;
             HexBoxDetail.ShadowSelectionColor = Color.FromArgb(  100,   60,   188,   255);
-            HexBoxDetail.Size = new Size(826, 154);
+            HexBoxDetail.Size = new Size(939, 187);
             HexBoxDetail.StringViewVisible = true;
             HexBoxDetail.TabIndex = 1;
             HexBoxDetail.UseFixedBytesPerLine = true;
@@ -115,7 +122,7 @@
             splitContainer1.Anchor =  AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             splitContainer1.FixedPanel = FixedPanel.Panel2;
             splitContainer1.IsSplitterFixed = true;
-            splitContainer1.Location = new Point(835, 448);
+            splitContainer1.Location = new Point(948, 538);
             splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -127,8 +134,8 @@
             // 
             splitContainer1.Panel2.Controls.Add(FlowLayoutPlayerButtons);
             splitContainer1.Panel2MinSize = 68;
-            splitContainer1.Size = new Size(325, 154);
-            splitContainer1.SplitterDistance = 220;
+            splitContainer1.Size = new Size(369, 187);
+            splitContainer1.SplitterDistance = 264;
             splitContainer1.TabIndex = 5;
             // 
             // VVVlc
@@ -208,10 +215,10 @@
             // RBoxObu
             // 
             RBoxObu.Anchor =  AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            RBoxObu.Location = new Point(835, 3);
+            RBoxObu.Location = new Point(948, 3);
             RBoxObu.Name = "RBoxObu";
             RBoxObu.ReadOnly = true;
-            RBoxObu.Size = new Size(325, 439);
+            RBoxObu.Size = new Size(369, 529);
             RBoxObu.TabIndex = 4;
             RBoxObu.Text = "";
             RBoxObu.WordWrap = false;
@@ -220,7 +227,7 @@
             // 
             BtnAbout.Anchor =  AnchorStyles.Top | AnchorStyles.Right;
             BtnAbout.Image = Properties.Resources.av1_logo;
-            BtnAbout.Location = new Point(1096, 20);
+            BtnAbout.Location = new Point(1240, 20);
             BtnAbout.Name = "BtnAbout";
             BtnAbout.Size = new Size(79, 33);
             BtnAbout.TabIndex = 5;
@@ -232,9 +239,9 @@
             flowLayoutPanel1.Controls.Add(BtnOpen);
             flowLayoutPanel1.Controls.Add(BtnClose);
             flowLayoutPanel1.Controls.Add(BtnReopen);
-            flowLayoutPanel1.Controls.Add(button4);
+            flowLayoutPanel1.Controls.Add(BtnExpand);
             flowLayoutPanel1.Controls.Add(button5);
-            flowLayoutPanel1.Location = new Point(12, 3);
+            flowLayoutPanel1.Location = new Point(5, 2);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
             flowLayoutPanel1.Size = new Size(282, 54);
             flowLayoutPanel1.TabIndex = 2;
@@ -269,14 +276,15 @@
             BtnReopen.UseVisualStyleBackColor = true;
             BtnReopen.Click += BtnReopen_Click;
             // 
-            // button4
+            // BtnExpand
             // 
-            button4.Image = Properties.Resources.dialpad;
-            button4.Location = new Point(165, 3);
-            button4.Name = "button4";
-            button4.Size = new Size(48, 48);
-            button4.TabIndex = 3;
-            button4.UseVisualStyleBackColor = true;
+            BtnExpand.Image = Properties.Resources.compress;
+            BtnExpand.Location = new Point(165, 3);
+            BtnExpand.Name = "BtnExpand";
+            BtnExpand.Size = new Size(48, 48);
+            BtnExpand.TabIndex = 3;
+            BtnExpand.UseVisualStyleBackColor = true;
+            BtnExpand.Click += BtnExpand_Click;
             // 
             // button5
             // 
@@ -289,17 +297,17 @@
             // 
             // PBarLoadding
             // 
-            PBarLoadding.Location = new Point(15, 62);
+            PBarLoadding.Location = new Point(4, 231);
             PBarLoadding.Maximum = 1000;
             PBarLoadding.Name = "PBarLoadding";
-            PBarLoadding.Size = new Size(824, 2);
+            PBarLoadding.Size = new Size(940, 2);
             PBarLoadding.Step = 1;
             PBarLoadding.TabIndex = 6;
             // 
             // flowLayoutPanel2
             // 
             flowLayoutPanel2.Controls.Add(BtnFormat);
-            flowLayoutPanel2.Location = new Point(300, 20);
+            flowLayoutPanel2.Location = new Point(293, 20);
             flowLayoutPanel2.Name = "flowLayoutPanel2";
             flowLayoutPanel2.Size = new Size(158, 36);
             flowLayoutPanel2.TabIndex = 7;
@@ -314,12 +322,41 @@
             BtnFormat.TabIndex = 0;
             BtnFormat.UseVisualStyleBackColor = true;
             // 
+            // chart1
+            // 
+            chart1.Anchor =  AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            chartArea1.Name = "ChartArea1";
+            chart1.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            chart1.Legends.Add(legend1);
+            chart1.Location = new Point(5, 62);
+            chart1.Name = "chart1";
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StackedColumn;
+            series1.Legend = "Legend1";
+            series1.Name = "Intra";
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StackedColumn;
+            series2.Legend = "Legend1";
+            series2.Name = "Inter";
+            series3.ChartArea = "ChartArea1";
+            series3.Legend = "Legend1";
+            series3.Name = "Size";
+            chart1.Series.Add(series1);
+            chart1.Series.Add(series2);
+            chart1.Series.Add(series3);
+            chart1.Size = new Size(1314, 163);
+            chart1.TabIndex = 8;
+            chart1.Text = "chart1";
+            chart1.MouseDown += chart1_MouseDown;
+            // 
             // MainForm
             // 
             AllowDrop = true;
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1187, 686);
+            ClientSize = new Size(1323, 971);
+            Controls.Add(chart1);
             Controls.Add(flowLayoutPanel2);
             Controls.Add(PBarLoadding);
             Controls.Add(flowLayoutPanel1);
@@ -341,6 +378,7 @@
             FlowLayoutPlayerButtons.PerformLayout();
             flowLayoutPanel1.ResumeLayout(false);
             flowLayoutPanel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize) chart1).EndInit();
             ResumeLayout(false);
         }
 
@@ -352,7 +390,7 @@
         private Button BtnOpen;
         private Button BtnClose;
         private Button BtnReopen;
-        private Button button4;
+        private Button BtnExpand;
         private Button button5;
         private Button BtnAbout;
         private RichTextBox RBoxObu;
@@ -366,5 +404,6 @@
         private ProgressBar PBarLoadding;
         private FlowLayoutPanel flowLayoutPanel2;
         private Button BtnFormat;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chart1;
     }
 }
