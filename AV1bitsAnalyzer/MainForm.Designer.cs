@@ -348,6 +348,7 @@
             chart1.Size = new Size(1314, 163);
             chart1.TabIndex = 8;
             chart1.Text = "chart1";
+            chart1.MouseWheel += Chart1_MouseWheel;
             chart1.MouseDown += chart1_MouseDown;
             // 
             // MainForm
