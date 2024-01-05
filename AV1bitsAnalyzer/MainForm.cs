@@ -81,8 +81,8 @@ namespace AV1bitsAnalyzer
             area.Position.Auto = false;
             area.Position.X = 1;
             area.Position.Y = 1;
-            area.Position.Width = 100;
-            area.Position.Height = 99;
+            area.Position.Width = 98;
+            area.Position.Height = 100;
 
             area.AxisX.IsMarginVisible = false;
             area.AxisX.LineWidth = 1;
@@ -597,7 +597,7 @@ namespace AV1bitsAnalyzer
         private void BtnExpand_Click (object sender, EventArgs e)
         {
             LVHexInfo.BeginUpdate();
-            foreach (ListViewGroup g in LVHexInfo.Groups )
+            foreach ( ListViewGroup g in LVHexInfo.Groups )
             {
                 g.CollapsedState = _expand ? ListViewGroupCollapsedState.Expanded : ListViewGroupCollapsedState.Collapsed;
             }
@@ -609,19 +609,30 @@ namespace AV1bitsAnalyzer
         {
             HitTestResult result = chart1.HitTest( e.X, e.Y );
 
-            if ( result.ChartElementType == ChartElementType.DataPoint 
+            if ( result.ChartElementType == ChartElementType.DataPoint
                 || result.ChartElementType == ChartElementType.DataPointLabel )
             {
                 var idx = result.PointIndex;
 
                 var g = LVHexInfo.Groups[idx];
-                if(g != null )
+                if ( g != null )
                 {
                     LVHexInfo.TopItem = g.Items[0];
                     g.Items[0].Selected = true;
                     LVHexInfo.EnsureVisible(g.Items[0].Index);
                 }
             }
+        }
+
+        private void Chart1_MouseWheel (object sender, MouseEventArgs e)
+        {
+            int numberOfTextLinesToMove = e.Delta * SystemInformation.MouseWheelScrollLines / 120;
+            int numberOfPixelsToMove = numberOfTextLinesToMove * 2;
+
+            var max = chart1.Series[0].Points.Count - (chart1.Width/30 - 2);
+            var view = chart1.ChartAreas[0].AxisX.ScaleView;
+            var siz =  Math.Min(Math.Max(view.Position - numberOfPixelsToMove, 0), max);
+            chart1.ChartAreas[0].AxisX.ScaleView.Position = siz;
         }
     }
 }
