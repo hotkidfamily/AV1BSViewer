@@ -3,6 +3,7 @@ using AV1bitsAnalyzer.Properties;
 using Be.Windows.Forms;
 using LibVLCSharp.Shared;
 using System.Diagnostics;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -65,7 +66,7 @@ namespace AV1bitsAnalyzer
             chart1.Series[0].ChartType = SeriesChartType.StackedColumn;
             chart1.Series[1].ChartType = SeriesChartType.StackedColumn;
 
-            var sizeSeries = chart1.Series[2];
+            var sizeSeries = chart1.Series["Size"];
             sizeSeries.ChartType = SeriesChartType.Line;
             sizeSeries.MarkerStyle = MarkerStyle.Circle;
             sizeSeries.MarkerSize = 5;
@@ -274,28 +275,16 @@ namespace AV1bitsAnalyzer
                             frame_Length += obu.Size + obu.ObuDataOffset;
                         }
 
-                        if ( keyframe )
+                        chart1.Series["Intra"].Points.AddXY(f.FrameIdx, keyframe ? 1000 : 0);
+                        chart1.Series["Inter"].Points.AddXY(f.FrameIdx, keyframe ? 0 : 100);
+                        f.Frametype = keyframe ? "IDR       " : "Inter(P/B)";
+                        DataPoint v = new ()
                         {
-                            chart1.Series["Intra"].Points.AddXY(f.FrameIdx, 1000);
-                            chart1.Series["Inter"].Points.AddXY(f.FrameIdx, 0);
-                            f.Frametype = "IDR       ";
-                        }
-                        else
-                        {
-                            chart1.Series["Intra"].Points.AddXY(f.FrameIdx, 0);
-                            chart1.Series["Inter"].Points.AddXY(f.FrameIdx, 100);
-                            f.Frametype = "Inter(P/B)";
-                        }
-                        {
-                            DataPoint v = new ()
-                            {
-                                XValue = f.FrameIdx,
-                                YValues = [frame_Length],
-                                Label = frame_Length.ToString(),
-                                //LabelAngle = 60,
-                            };
-                            chart1.Series[2].Points.Add(v);
-                        }
+                            XValue = f.FrameIdx,
+                            YValues = [frame_Length],
+                            Label = frame_Length.ToString(),
+                        };
+                        chart1.Series["Size"].Points.Add(v);
                         group.Header = f.ToString();
                     }
                     LVHexInfo.EndUpdate();
@@ -320,7 +309,7 @@ namespace AV1bitsAnalyzer
             VVVlc.MediaPlayer?.Stop();
             VVVlc.MediaPlayer?.Dispose();
             VVVlc.MediaPlayer = null;
-            LVHexInfo.Items.Clear();
+            
             HexBoxDetail.ByteProvider = null;
             _decodeContext = new();
             PBarLoadding.Value = 0;
@@ -328,6 +317,10 @@ namespace AV1bitsAnalyzer
             {
                 s.Points.Clear();
             }
+
+            LVHexInfo.Items.Clear();
+            LVHexInfo.Groups.Clear();
+
             Text = _MainFrameTextDefault;
         }
 
