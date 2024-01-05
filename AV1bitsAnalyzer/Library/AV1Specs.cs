@@ -7,7 +7,8 @@ namespace AV1bitsAnalyzer.Library
     /*********************************************
      * Various enums from the AV1 specification. *
      *********************************************/
-    
+
+#pragma warning disable CA1069 // 不应复制枚举值
     public enum OBULimited
     {
         REFS_PER_FRAME     = 7,      /* Number of reference frames that can be used for inter prediction */
@@ -200,6 +201,7 @@ namespace AV1bitsAnalyzer.Library
         PRIMARY_REF_NONE     = 7,         /* Value of primary_ref_frame indicating that there is no primary reference frame */
         BUFFER_POOL_MAX_SIZE = 10,        /* Number of frames in buffer pool */
     }
+#pragma warning restore CA1069 // 不应复制枚举值
 
     /*
      * OBU types.
@@ -383,9 +385,9 @@ namespace AV1bitsAnalyzer.Library
         {
             StringBuilder sb = new();
 
-            sb.Append($"\r\n     - decoder_buffer_delay = {decoder_buffer_delay}");
-            sb.Append($"\r\n     - encoder_buffer_delay =  {encoder_buffer_delay}");
-            sb.Append($"\r\n     - low_delay_mode_flag = {low_delay_mode_flag}");
+            sb.Append($"\r\n       - decoder_buffer_delay = {decoder_buffer_delay}");
+            sb.Append($"\r\n       - encoder_buffer_delay =  {encoder_buffer_delay}");
+            sb.Append($"\r\n       - low_delay_mode_flag = {low_delay_mode_flag}");
 
             return sb.ToString();
         }
@@ -986,6 +988,22 @@ namespace AV1bitsAnalyzer.Library
         public OBUMetadataItutT35 metadata_itut_t35;
         public OBUMetadataTimecode metadata_timecode;
         public OBUUnregisteredMetadata unregistered;
+
+        public override string ToString ()
+        {
+            StringBuilder sb = new ();
+
+            sb.Append("MetaData");
+            sb.Append($"\r\n metadata_type = ${metadata_type}");
+            sb.Append($"\r\n metadata_hdr_cll = ${metadata_hdr_cll}");
+            sb.Append($"\r\n metadata_hdr_mdcv = ${metadata_hdr_mdcv}");
+            sb.Append($"\r\n metadata_scalability = ${metadata_scalability}");
+            sb.Append($"\r\n metadata_itut_t35 = ${metadata_itut_t35}");
+            sb.Append($"\r\n metadata_timecode = ${metadata_timecode}");
+            sb.Append($"\r\n unregistered = ${unregistered}");
+
+            return sb.ToString();
+        }
     }
 
     public struct OBUMetadataHdrCll
