@@ -157,7 +157,7 @@
             FlowLayoutPlayerButtons.FlowDirection = FlowDirection.TopDown;
             FlowLayoutPlayerButtons.Location = new Point(0, 0);
             FlowLayoutPlayerButtons.Name = "FlowLayoutPlayerButtons";
-            FlowLayoutPlayerButtons.Size = new Size(101, 154);
+            FlowLayoutPlayerButtons.Size = new Size(101, 187);
             FlowLayoutPlayerButtons.TabIndex = 6;
             // 
             // BtnPlay
@@ -348,8 +348,8 @@
             chart1.Size = new Size(1314, 163);
             chart1.TabIndex = 8;
             chart1.Text = "chart1";
-            chart1.MouseWheel += Chart1_MouseWheel;
             chart1.MouseDown += chart1_MouseDown;
+            chart1.MouseWheel += Chart1_MouseWheel;
             // 
             // MainForm
             // 
