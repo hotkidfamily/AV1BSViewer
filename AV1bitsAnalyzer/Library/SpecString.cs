@@ -41,7 +41,8 @@ namespace AV1bitsAnalyzer.Library
             {
                 primary_ref_frame = 0;
             }
-            sb.Append($"\r\n |- primary_ref_frame = {primary_ref_frame}");
+            string primary_ref = primary_ref_frame == 7 ? "None" : primary_ref_frame.ToString();
+            sb.Append($"\r\n |- primary_ref_frame = {primary_ref}");
 
             if ( h.decoder_model_info_present_flag )
             {
@@ -52,7 +53,7 @@ namespace AV1bitsAnalyzer.Library
                 }
             }
 
-            sb.Append($"\r\n |- refresh_frame_flags = {v.refresh_frame_flags}");
+            sb.Append($"\r\n |- refresh_frame_flags = 0x{v.refresh_frame_flags:X}, {TypeToString.Bits8(v.refresh_frame_flags)}");
             sb.Append($"\r\n |- ref_order_hint = {TypeToString.ByteArray(v.ref_order_hint)}");
             sb.Append($"\r\n |- frame_width_minus_1 = {v.frame_width_minus_1}");
             sb.Append($"\r\n |- frame_height_minus_1 = {v.frame_height_minus_1}");
