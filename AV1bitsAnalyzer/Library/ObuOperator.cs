@@ -27,7 +27,7 @@ namespace AV1bitsAnalyzer.Library
         public uint[] RefRenderHeight = new uint[8];
         public int[] RefFrameSignBias = new int[8];
         public OBUFilmGrainParameters[] RefGrainParams = new OBUFilmGrainParameters[8];
-        public byte order_hint = 0;
+        //public byte order_hint = 0;
         public uint[,,] SavedGmParams = new uint[8, 8, 6];
         public bool[,,] SavedFeatureEnabled = new bool[8, 8, 8];
         public short[,,] SavedFeatureData = new short[8, 8, 8];

@@ -105,6 +105,8 @@ namespace AV1bitsAnalyzer
             area.AxisY.LogarithmBase = 10;
             area.AxisY.IsLogarithmic = true;
             area.AxisY.MajorGrid.Enabled = false;
+            area.AxisY.IntervalType = DateTimeIntervalType.Number;
+            area.AxisY.Interval = 6;
         }
 
         private void BtnAbout_Click (object sender, EventArgs e)
@@ -367,6 +369,24 @@ namespace AV1bitsAnalyzer
 
             return frametype;
         }
+
+        private static void ParseFrameID (ref ObuParseRet ret, OBUFrameHeader fh, OBPAnalyzerContext ctx)
+        {
+            if ( fh.show_frame )
+            {
+                ret.display_frame_id = fh.order_hint;
+            }
+            else if ( fh.show_existing_frame )
+            {
+                ret.display_frame_id = ctx.RefOrderHint[fh.frame_to_show_map_idx];
+                ret.orderHint = -1;
+            }
+            if ( !fh.show_existing_frame )
+            {
+                ret.decode_frame_id = ctx.seqheader.frame_id_numbers_present_flag ? fh.current_frame_id : uint.MaxValue;
+            }
+        }
+
         internal struct ObuParseRet
         {
             public string headerAnalysisRes = string.Empty;
@@ -431,18 +451,7 @@ namespace AV1bitsAnalyzer
                         sb.Append(tileGroupStrs);
                         ret.headerAnalysisRes = sb.ToString();
                         ret.orderHint = fh.order_hint;
-                        if(fh.show_frame)
-                        {
-                            ret.display_frame_id = Math.Max(fh.display_frame_id, fh.order_hint);
-                        }
-                        else if (fh.show_existing_frame )
-                        {
-                            ret.display_frame_id = _parserCtx.RefOrderHint[fh.frame_to_show_map_idx];
-                        }
-                        if (!fh.show_existing_frame)
-                        {
-                            ret.decode_frame_id = fh.current_frame_id;
-                        }
+                        ParseFrameID(ref ret, fh, _parserCtx);
                     }
                     break;
                 case OBUType.OBU_FRAME_HEADER:
@@ -455,18 +464,7 @@ namespace AV1bitsAnalyzer
                         ret.frameType = ParseFrameType(fh);
                         ret.headerAnalysisRes = SpecString.ToFrameHeaderString(fh, _parserCtx.seqheader);
                         ret.orderHint = fh.order_hint;
-                        if ( fh.show_frame )
-                        {
-                            ret.display_frame_id = Math.Max(fh.display_frame_id, fh.order_hint);
-                        }
-                        else if ( fh.show_existing_frame )
-                        {
-                            ret.display_frame_id = _parserCtx.RefOrderHint[fh.frame_to_show_map_idx];
-                        }
-                        if ( !fh.show_existing_frame )
-                        {
-                            ret.decode_frame_id = fh.current_frame_id;
-                        }
+                        ParseFrameID(ref ret, fh, _parserCtx);
                     }
                     break;
                 case OBUType.OBU_TILE_LIST:
@@ -537,6 +535,8 @@ namespace AV1bitsAnalyzer
                 var idx = (item.Index + 1) * 1.0f;
                 var total = LVHexInfo.Items.Count;
                 ReportProgress(idx / total);
+
+                chart1.ChartAreas[0].AxisX.ScaleView.Position = v.FrameIdx - 1;
             }
         }
 
