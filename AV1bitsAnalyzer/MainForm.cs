@@ -34,6 +34,7 @@ namespace AV1bitsAnalyzer
         private string? _parseFilePath;
         private string _MainFrameTextDefault = $"MainForm {Resources.AppVersion} ";
         private bool _expand = true;
+        DynamicFileByteProvider? _dynamicFileByteProvider;
 
         public MainForm ()
         {
@@ -158,6 +159,10 @@ namespace AV1bitsAnalyzer
             BtnFormat.Image = bmp;
 
             this.Text = $"{_MainFrameTextDefault} ( {_parseFilePath} )";
+
+            var fs = new FileStream(_parseFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            _dynamicFileByteProvider = new DynamicFileByteProvider(fs);
+            HexBoxDetail.ByteProvider = _dynamicFileByteProvider;
         }
 
         private void BtnOpen_Click (object sender, EventArgs e)
@@ -502,21 +507,20 @@ namespace AV1bitsAnalyzer
             if ( item?.Tag != null && gp?.Tag != null )
             {
                 FramesInfo v = (FramesInfo)gp.Tag;
-                DynamicByteProvider provider = new(v.Data);
                 ObuParseRet v2 = (ObuParseRet)item.Tag;
-                HexBoxDetail.ByteProvider = provider;
-                HexBoxDetail.SelectionStart = v2.obuOffset;
+                HexBoxDetail.SelectionStart = v.Address + v2.obuOffset;
+                HexBoxDetail.ScrollByteIntoView(HexBoxDetail.SelectionStart);
                 HexBoxDetail.HighligedRegions.Clear();
 
                 HexBox.HighlightedRegion region2 = new ()
                 {
-                    Start = v2.obuOffset,
+                    Start = (int)(v.Address + v2.obuOffset),
                     Length = v2.obuDataOffset,
                     Color = Color.IndianRed
                 };
                 HexBox.HighlightedRegion region = new ()
                 {
-                    Start = v2.obuOffset + v2.obuDataOffset,
+                    Start = (int)(v.Address + v2.obuOffset + v2.obuDataOffset),
                     Length = v2.size,
                     Color = Color.CadetBlue
                 };
