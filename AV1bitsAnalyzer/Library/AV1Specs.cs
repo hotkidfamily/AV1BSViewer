@@ -1,9 +1,9 @@
-﻿using AV1bitsAnalyzer.Library;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 
 namespace AV1bitsAnalyzer.Library
 {
+    using SpecTree = Queue<STItem>;
     /*********************************************
      * Various enums from the AV1 specification. *
      *********************************************/
@@ -200,6 +200,13 @@ namespace AV1bitsAnalyzer.Library
         COEFF_CDF_Q_CTXS     = 4,         /* Number of selectable context types for the coeff() syntax structure */
         PRIMARY_REF_NONE     = 7,         /* Value of primary_ref_frame indicating that there is no primary reference frame */
         BUFFER_POOL_MAX_SIZE = 10,        /* Number of frames in buffer pool */
+        LAST_FRAME = 1,
+        LAST2_FRAME = 2,
+        LAST3_FRAME = 3,
+        GOLDEN_FRAME = 4,
+        BWDREF_FRAME = 5,
+        ALTREF2_FRAME = 6,
+        ALTREF_FRAME = 7,
     }
 #pragma warning restore CA1069 // 不应复制枚举值
 
@@ -341,6 +348,19 @@ namespace AV1bitsAnalyzer.Library
         public uint time_scale;
         public bool equal_picture_interval;
         public uint num_ticks_per_picture_minus_1;
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"time_info"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"num_units_in_display_tick = {num_units_in_display_tick}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"time_scale =  {time_scale}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"equal_picture_interval = {equal_picture_interval}"));
+            if ( equal_picture_interval )
+            {
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"num_ticks_per_picture_minus_1 = {num_ticks_per_picture_minus_1}"));
+            }
+            return sb;
+        }
 
         public override string ToString ()
         {
@@ -364,6 +384,17 @@ namespace AV1bitsAnalyzer.Library
         public uint num_units_in_decoding_tick;
         public byte buffer_removal_time_length_minus_1;
         public byte frame_presentation_time_length_minus_1;
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"decoder_mode_info"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"buffer_delay_length_minus_1 = {buffer_delay_length_minus_1}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"num_units_in_decoding_tick =  {num_units_in_decoding_tick}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"buffer_removal_time_length_minus_1 = {buffer_removal_time_length_minus_1}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_presentation_time_length_minus_1 = {frame_presentation_time_length_minus_1}"));
+            return sb;
+        }
+
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -381,6 +412,17 @@ namespace AV1bitsAnalyzer.Library
         public uint decoder_buffer_delay;
         public uint encoder_buffer_delay;
         public bool low_delay_mode_flag;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"opera_parameters_info"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"decoder_buffer_delay = {decoder_buffer_delay}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"encoder_buffer_delay =  {encoder_buffer_delay}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"low_delay_mode_flag = {low_delay_mode_flag}"));
+            return sb;
+        }
+
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -409,7 +451,29 @@ namespace AV1bitsAnalyzer.Library
         public bool subsampling_y;
         public OBUChromaSamplePosition chroma_sample_position;
         public bool separate_uv_delta_q;
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
 
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"ColorConfig"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"high_bitdepth = {high_bitdepth}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"twelve_bit = {twelve_bit}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"BitDepth = {BitDepth}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"mono_chrome = {mono_chrome}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"NumPlanes = {NumPlanes}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"color_description_present_flag = {color_description_present_flag}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"color_primaries = {color_primaries}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"transfer_characteristics = {transfer_characteristics}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"matrix_coefficients = {matrix_coefficients}"));
+            var desc = color_range?"full":"limited";
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"color_range = {desc}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"subsampling_x = {subsampling_x}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"subsampling_y = {subsampling_y}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"chroma_sample_position = {chroma_sample_position}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"separate_uv_delta_q = {separate_uv_delta_q}"));
+
+            return sb;
+        }
         public new readonly string ToString()
         {
             StringBuilder sb = new();
@@ -480,6 +544,303 @@ namespace AV1bitsAnalyzer.Library
         public bool enable_restoration;
         public OBUColorConfig color_config;
         public bool film_grain_params_present;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new();
+
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_root, $"SequenceHeader"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"seq_profile = {seq_profile}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"still_picture = {still_picture}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"reduced_still_picture_v = {reduced_still_picture_header}"));
+            if ( reduced_still_picture_header )
+            {
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"timing_info_present_flag = {timing_info_present_flag}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"decoder_model_info_present_flag = {decoder_model_info_present_flag}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"initial_display_delay_present_flag = {initial_display_delay_present_flag}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"operating_points_cnt_minus_1 = {operating_points_cnt_minus_1}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"operating_point_idc = {operating_point_idc[0]}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"seq_level_idx = {seq_level_idx[0]}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"seq_level_idx = {seq_level_idx[0]}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"seq_tier = {seq_tier[0]}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"decoder_model_present_for_this_op = {decoder_model_present_for_this_op[0]}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"initial_display_delay_present_for_this_op = {initial_display_delay_present_for_this_op[0]}"));
+            }
+            else
+            {
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"timing_info_present_flag = {timing_info_present_flag}"));
+                if ( timing_info_present_flag )
+                {
+                    //sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"  - timing_info = ( {timing_info.ToString()} )"));
+                    var t = timing_info.ToSpecTree();
+                    foreach (var tr in t)
+                    {
+                        var t3 = tr;
+                        t3.level += 1 + 1;
+                        sb.Enqueue(t3);
+                    }
+                }
+
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"decoder_model_info_present_flag = {decoder_model_info_present_flag}"));
+                if ( decoder_model_info_present_flag )
+                {
+                    //sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"  - decoder_model_info = ( {decoder_model_info.ToString()} )"));
+                    var t = decoder_model_info.ToSpecTree();
+                    foreach ( var tr in t )
+                    {
+                        var t3 = tr;
+                        t3.level += 1 + 1;
+                        sb.Enqueue(t3);
+                    }
+                }
+
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"initial_display_delay_present_flag = {initial_display_delay_present_flag}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"operating_points_cnt_minus_1 = {operating_points_cnt_minus_1}"));
+                for ( var i = 0; i <= operating_points_cnt_minus_1; i++ )
+                {
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"operating_point_idc = {operating_point_idc[i]}"));
+                    var level = seq_level_idx[i];
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"seq_level_idx = {level}"));
+                    bool st = seq_tier[i];
+                    if ( level < 7 )
+                    {
+                        st = false;
+                    }
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"seq_tier = {st}"));
+                    if ( decoder_model_info_present_flag )
+                    {
+                        sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"decoder_model_present_for_this_op = {decoder_model_present_for_this_op[i]}"));
+                        if ( decoder_model_present_for_this_op[i] )
+                        {
+                            //sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"operating_parameters_info = ( {operating_parameters_info[i]} )"));
+                            var t = operating_parameters_info[i].ToSpecTree();
+                            foreach ( var tr in t )
+                            {
+                                var t3 = tr;
+                                t3.level += 2 + 1;
+                                sb.Enqueue(t3);
+                            }
+                        }
+                    }
+                    if ( initial_display_delay_present_flag )
+                    {
+                        sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"initial_display_delay_present_for_this_op = {initial_display_delay_present_for_this_op[i]}"));
+                        if ( initial_display_delay_present_for_this_op[i] )
+                        {
+                            sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"initial_display_delay_minus_1 = {initial_display_delay_minus_1[i]}"));
+                        }
+                    }
+                }
+
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_width_bits_minus_1 = {frame_width_bits_minus_1}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_height_bits_minus_1 = {frame_height_bits_minus_1}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"max_frame_width_minus_1 = {max_frame_width_minus_1}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"max_frame_height_minus_1 = {max_frame_height_minus_1}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"frame_id_numbers_present_flag = {frame_id_numbers_present_flag}"));
+                if ( frame_id_numbers_present_flag )
+                {
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"delta_frame_id_length_minus_2 = {delta_frame_id_length_minus_2}"));
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"additional_frame_id_length_minus_1 = {additional_frame_id_length_minus_1}"));
+                }
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"use_128x128_superblock = {use_128x128_superblock}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_filter_intra = {enable_filter_intra}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_intra_edge_filter = {enable_intra_edge_filter}"));
+                if ( reduced_still_picture_header )
+                {
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_interintra_compound = {enable_interintra_compound}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_masked_compound = {enable_masked_compound}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_warped_motion = {enable_warped_motion}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_dual_filter = {enable_dual_filter}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"enable_order_hint = {enable_order_hint}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_jnt_comp = {enable_jnt_comp}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_ref_frame_mvs = {enable_ref_frame_mvs}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"seq_force_screen_content_tools = {seq_force_screen_content_tools}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"seq_force_integer_mv = {seq_force_integer_mv}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"OrderHintBits = {OrderHintBits}"));
+                }
+                else
+                {
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_interintra_compound = {enable_interintra_compound}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_masked_compound = {enable_masked_compound}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_warped_motion = {enable_warped_motion}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_dual_filter = {enable_dual_filter}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"enable_order_hint = {enable_order_hint}"));
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"enable_jnt_comp = {enable_jnt_comp}"));
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"enable_ref_frame_mvs = {enable_ref_frame_mvs}"));
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"order_hint_bits_minus_1 = {order_hint_bits_minus_1}"));
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"OrderHintBits = {OrderHintBits}"));
+                    sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"seq_choose_screen_content_tools = {seq_choose_screen_content_tools}"));
+
+                    if ( seq_choose_screen_content_tools > 0 )
+                    {
+                        sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"seq_force_screen_content_tools = SELECT_SCREEN_CONTENT_TOOLS"));
+                    }
+                    else if ( seq_force_screen_content_tools > 0 )
+                    {
+                        sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"seq_force_screen_content_tools = {seq_force_screen_content_tools}"));
+                        sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"seq_choose_integer_mv = {seq_choose_integer_mv}"));
+                        if ( seq_choose_integer_mv > 0 )
+                        {
+                            sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"seq_force_integer_mv = SELECT_INTEGER_MV"));
+                        }
+                        else
+                        {
+                            sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"seq_force_integer_mv = {seq_force_integer_mv}"));
+                        }
+                    }
+                }
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_superres = {enable_superres}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_cdef = {enable_cdef}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"enable_restoration = {enable_restoration}"));
+                {
+                    var v = color_config.ToSpecTree();
+                    foreach ( var v2 in v )
+                    {
+                        var v3 = v2;
+                        v3.level += 1;
+                        sb.Enqueue(v3);
+                    }
+                }
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"film_grain_params_present = {film_grain_params_present}"));
+            }
+            return sb;
+        }
+
+        public override string ToString ()
+        {
+            StringBuilder sb = new();
+
+            sb.Append($"SequenceHeader");
+            sb.Append($"\r\n |- seq_profile = {seq_profile}");
+            sb.Append($"\r\n |- still_picture = {still_picture}");
+            sb.Append($"\r\n |- reduced_still_picture_v = {reduced_still_picture_header}");
+            if (reduced_still_picture_header )
+            {
+                sb.Append($"\r\n |- timing_info_present_flag = {timing_info_present_flag}");
+                sb.Append($"\r\n |- decoder_model_info_present_flag = {decoder_model_info_present_flag}");
+                sb.Append($"\r\n |- initial_display_delay_present_flag = {initial_display_delay_present_flag}");
+                sb.Append($"\r\n |- operating_points_cnt_minus_1 = {operating_points_cnt_minus_1}");
+                sb.Append($"\r\n |- operating_point_idc = {operating_point_idc[0]}");
+                sb.Append($"\r\n |- seq_level_idx = {seq_level_idx[0]}");
+                sb.Append($"\r\n |- seq_level_idx = {seq_level_idx[0]}");
+                sb.Append($"\r\n |- seq_tier = {seq_tier[0]}");
+                sb.Append($"\r\n |- decoder_model_present_for_this_op = {decoder_model_present_for_this_op[0]}");
+                sb.Append($"\r\n |- initial_display_delay_present_for_this_op = {initial_display_delay_present_for_this_op[0]}");
+            }
+            else
+            {
+                sb.Append($"\r\n |- timing_info_present_flag = {timing_info_present_flag}");
+                if ( timing_info_present_flag )
+                {
+                    sb.Append($"\r\n   - timing_info = ( {timing_info.ToString()} )");
+                }
+
+                sb.Append($"\r\n |- decoder_model_info_present_flag = {decoder_model_info_present_flag}");
+                if ( decoder_model_info_present_flag )
+                    sb.Append($"\r\n   - decoder_model_info = ( {decoder_model_info.ToString()} )");
+
+                sb.Append($"\r\n |- initial_display_delay_present_flag = {initial_display_delay_present_flag}");
+                sb.Append($"\r\n |- operating_points_cnt_minus_1 = {operating_points_cnt_minus_1}");
+                sb.Append($"\r\n   --");
+                for ( var i = 0; i <= operating_points_cnt_minus_1; i++ )
+                {
+                    sb.Append($"\r\n    - operating_point_idc = {operating_point_idc[i]}");
+                    var level = seq_level_idx[i];
+                    sb.Append($"\r\n    - seq_level_idx = {level}");
+                    bool st = seq_tier[i];
+                    if ( level < 7 )
+                    {
+                        st = false;
+                    }
+                    sb.Append($"\r\n    - seq_tier = {st}");
+                    if ( decoder_model_info_present_flag )
+                    {
+                        sb.Append($"\r\n    - decoder_model_present_for_this_op = {decoder_model_present_for_this_op[i]}");
+                        if ( decoder_model_present_for_this_op[i] )
+                        {
+                            sb.Append($"\r\n      - operating_parameters_info = ( {operating_parameters_info[i]} )");
+                        }
+                    }
+                    if ( initial_display_delay_present_flag )
+                    {
+                        sb.Append($"\r\n    - initial_display_delay_present_for_this_op = {initial_display_delay_present_for_this_op[i]}");
+                        if ( initial_display_delay_present_for_this_op[i] )
+                        {
+                            sb.Append($"\r\n      - initial_display_delay_minus_1 = {initial_display_delay_minus_1[i]}");
+                        }
+                    }
+                }
+
+                sb.Append($"\r\n |- frame_width_bits_minus_1 = {frame_width_bits_minus_1}");
+                sb.Append($"\r\n |- frame_height_bits_minus_1 = {frame_height_bits_minus_1}");
+                sb.Append($"\r\n |- max_frame_width_minus_1 = {max_frame_width_minus_1}");
+                sb.Append($"\r\n |- max_frame_height_minus_1 = {max_frame_height_minus_1}");
+                sb.Append($"\r\n |- frame_id_numbers_present_flag = {frame_id_numbers_present_flag}");
+                if ( frame_id_numbers_present_flag )
+                {
+                    sb.Append($"\r\n    - delta_frame_id_length_minus_2 = {delta_frame_id_length_minus_2}");
+                    sb.Append($"\r\n    - additional_frame_id_length_minus_1 = {additional_frame_id_length_minus_1}");
+                }
+                sb.Append($"\r\n |- use_128x128_superblock = {use_128x128_superblock}");
+                sb.Append($"\r\n |- enable_filter_intra = {enable_filter_intra}");
+                sb.Append($"\r\n |- enable_intra_edge_filter = {enable_intra_edge_filter}");
+                if ( reduced_still_picture_header )
+                {
+                    sb.Append($"\r\n |- enable_interintra_compound = {enable_interintra_compound}");
+                    sb.Append($"\r\n |- enable_masked_compound = {enable_masked_compound}");
+                    sb.Append($"\r\n |- enable_warped_motion = {enable_warped_motion}");
+                    sb.Append($"\r\n |- enable_dual_filter = {enable_dual_filter}");
+                    sb.Append($"\r\n |- enable_order_hint = {enable_order_hint}");
+                    sb.Append($"\r\n |- enable_jnt_comp = {enable_jnt_comp}");
+                    sb.Append($"\r\n |- enable_ref_frame_mvs = {enable_ref_frame_mvs}");
+                    sb.Append($"\r\n |- seq_force_screen_content_tools = {seq_force_screen_content_tools}");
+                    sb.Append($"\r\n |- seq_force_integer_mv = {seq_force_integer_mv}");
+                    sb.Append($"\r\n |- OrderHintBits = {OrderHintBits}");
+                }
+                else
+                {
+                    sb.Append($"\r\n |- enable_interintra_compound = {enable_interintra_compound}");
+                    sb.Append($"\r\n |- enable_masked_compound = {enable_masked_compound}");
+                    sb.Append($"\r\n |- enable_warped_motion = {enable_warped_motion}");
+                    sb.Append($"\r\n |- enable_dual_filter = {enable_dual_filter}");
+                    sb.Append($"\r\n |- enable_order_hint = {enable_order_hint}");
+                    sb.Append($"\r\n   - enable_jnt_comp = {enable_jnt_comp}");
+                    sb.Append($"\r\n   - enable_ref_frame_mvs = {enable_ref_frame_mvs}");
+                    sb.Append($"\r\n |- seq_choose_screen_content_tools = {seq_choose_screen_content_tools}");
+
+                    if ( seq_choose_screen_content_tools > 0 )
+                    {
+                        sb.Append($"\r\n   - seq_force_screen_content_tools = SELECT_SCREEN_CONTENT_TOOLS");
+                    }
+                    else if ( seq_force_screen_content_tools > 0 )
+                    {
+                        sb.Append($"\r\n   - seq_force_screen_content_tools = {seq_force_screen_content_tools}");
+                        sb.Append($"\r\n      - seq_choose_integer_mv = {seq_choose_integer_mv}");
+                        if ( seq_choose_integer_mv > 0 )
+                        {
+                            sb.Append($"\r\n        - seq_force_integer_mv = SELECT_INTEGER_MV");
+                        }
+                        else
+                        {
+                            sb.Append($"\r\n        - seq_force_integer_mv = {seq_force_integer_mv}");
+                        }
+                    }
+
+                    if ( enable_order_hint )
+                    {
+                        sb.Append($"\r\n   - order_hint_bits_minus_1 = {order_hint_bits_minus_1}");
+                        sb.Append($"\r\n   - OrderHintBits = {OrderHintBits}");
+                    }
+                }
+                sb.Append($"\r\n |- enable_superres = {enable_superres}");
+                sb.Append($"\r\n |- enable_cdef = {enable_cdef}");
+                sb.Append($"\r\n |- enable_restoration = {enable_restoration}");
+                sb.Append($"\r\n |- color_config = {color_config.ToString()}");
+                sb.Append($"\r\n |_ film_grain_params_present = {film_grain_params_present}");
+            }
+
+            return sb.ToString();
+        }
     }
 
     public class OBUFilmGrainParameters
@@ -513,6 +874,98 @@ namespace AV1bitsAnalyzer.Library
         public ushort cr_offset;
         public bool overlap_flag;
         public bool clip_to_restricted_range;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"FilmGrainParameters"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"apply_grain = {apply_grain}"));
+            if ( apply_grain )
+            {
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"grain_seed = {grain_seed}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"update_grain = {update_grain}"));
+                if ( !update_grain )
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"film_grain_params_ref_idx = {film_grain_params_ref_idx}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"num_y_points = {num_y_points}"));
+                if ( num_y_points > 0 )
+                {
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_logicalnode, $"(point_y_value, point_y_scaling) ="));
+                    for ( var i = 0; i < num_y_points; i++ )
+                    {
+                        sb.Enqueue(new STItem(4, STItemNoteType.NoteType_node, $"{point_y_value[i]},{point_y_scaling[i]}"));
+                    }
+                }
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"chroma_scaling_from_luma = {chroma_scaling_from_luma}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"num_cb_points = {num_cb_points}"));
+                if ( num_cb_points > 0 )
+                {
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"(point_cb_value, point_cb_scaling) ="));
+                    for ( var i = 0; i < num_cb_points; i++ )
+                    {
+                        sb.Enqueue(new STItem(4, STItemNoteType.NoteType_node, $"{point_cb_value[i]},{point_cb_scaling[i]}"));
+                    }
+                }
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"num_cr_points = {num_cr_points}"));
+                if ( num_cr_points > 0 )
+                {
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"(point_cr_value, point_cr_scaling) ="));
+                    for ( var i = 0; i < num_cr_points; i++ )
+                    {
+                        sb.Enqueue(new STItem(4, STItemNoteType.NoteType_node, $"{point_cr_value[i]},{point_cr_scaling[i]}"));
+                    }
+                }
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"grain_scaling_minus_8 = {grain_scaling_minus_8}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"ar_coeff_lag = {ar_coeff_lag}"));
+                var numPosLuma = 2 * ar_coeff_lag * (ar_coeff_lag + 1) + 1;
+                var numPosChroma = numPosLuma;
+                if ( num_y_points > 0 )
+                {
+                    numPosChroma += 1;
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"ar_coeffs_y_plus_128 ="));
+                    for ( var i = 0; i < numPosLuma; i++ )
+                    {
+                        sb.Enqueue(new STItem(4, STItemNoteType.NoteType_node, $"{ar_coeffs_y_plus_128[i]}"));
+                    }
+                }
+                if ( chroma_scaling_from_luma || num_cb_points > 0 )
+                {
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"ar_coeffs_cb_plus_128 ="));
+                    for ( var i = 0; i < numPosChroma; i++ )
+                    {
+                        sb.Enqueue(new STItem(4, STItemNoteType.NoteType_node, $"{ar_coeffs_cb_plus_128[i]}"));
+                    }
+                }
+                if ( chroma_scaling_from_luma || num_cr_points > 0 )
+                {
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"ar_coeffs_cr_plus_128 ="));
+                    for ( var i = 0; i < numPosChroma; i++ )
+                    {
+                        sb.Enqueue(new STItem(4, STItemNoteType.NoteType_node, $"{ar_coeffs_cr_plus_128[i]}"));
+                    }
+                }
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"ar_coeff_shift_minus_6 = {ar_coeff_shift_minus_6}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"grain_scale_shift = {grain_scale_shift}"));
+
+                if ( num_cb_points > 0 )
+                {
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"cb_mult = {cb_mult}"));
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"cb_luma_mult = {cb_luma_mult}"));
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"cb_offset = {cb_offset}"));
+                }
+
+                if ( num_cr_points > 0 )
+                {
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"cr_mult = {cr_mult}"));
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"cr_luma_mult = {cr_luma_mult}"));
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"cr_offset = {cr_offset}"));
+                }
+
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"overlap_flag = {overlap_flag}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"clip_to_restricted_range = {clip_to_restricted_range}"));
+            }
+
+            return sb;
+        }
 
         public override string ToString ()
         {
@@ -610,9 +1063,18 @@ namespace AV1bitsAnalyzer.Library
     public struct OBUTemporal_point_info
     {
         public uint frame_presentation_time;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Temporal_point_info"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_presentation_time = {frame_presentation_time}"));
+            return sb;
+        }
+
         public new readonly string ToString ()
         {
-            return $"frame_presentation_time = {frame_presentation_time}";
+            return $"";
         }
     }
 
@@ -620,6 +1082,15 @@ namespace AV1bitsAnalyzer.Library
     {
         public bool use_superres;
         public byte coded_denom;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Superres_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"use_superres = {use_superres}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"coded_denom =  {coded_denom}"));
+            return sb;
+        }
 
         public override string ToString ()
         {
@@ -636,7 +1107,14 @@ namespace AV1bitsAnalyzer.Library
     {
         public bool is_filter_switchable;
         public byte interpolation_filter;
-
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Interpolation_filter"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"is_filter_switchable = {is_filter_switchable}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"interpolation_filter =  {interpolation_filter}"));
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -654,7 +1132,18 @@ namespace AV1bitsAnalyzer.Library
         public ushort TileCols;
         public uint context_update_tile_id;
         public byte tile_size_bytes_minus_1;
-
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Tile_info"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"uniform_tile_spacing_flag = {uniform_tile_spacing_flag}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"TileRows = {TileRows}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"TileCols = {TileCols}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"context_update_tile_id = {context_update_tile_id}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"tile_size_bytes_minus_1 = {tile_size_bytes_minus_1}"));
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -677,7 +1166,18 @@ namespace AV1bitsAnalyzer.Library
         public byte qm_y;
         public byte qm_u;
         public byte qm_v;
-
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Quantization_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"base_q_idx = {base_q_idx}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"diff_uv_delta = {diff_uv_delta}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"using_qmatrix = {using_qmatrix}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"qm_y = {qm_y}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"qm_u = {qm_u}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"qm_v = {qm_v}"));
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -699,7 +1199,16 @@ namespace AV1bitsAnalyzer.Library
         public bool segmentation_update_map;
         public int segmentation_temporal_update;
         public int segmentation_update_data;
-
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Segmentation_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"segmentation_enabled = {segmentation_enabled}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"segmentation_update_map =  {segmentation_update_map}"));
+            sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"segmentation_temporal_update = {segmentation_temporal_update}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"segmentation_update_data =  {segmentation_update_data}"));
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -717,7 +1226,14 @@ namespace AV1bitsAnalyzer.Library
     {
         public bool delta_q_present;
         public byte delta_q_res;
-
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Delta_q_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"delta_q_present = {delta_q_present}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"delta_q_res =  {delta_q_res}"));
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -734,7 +1250,18 @@ namespace AV1bitsAnalyzer.Library
         public bool delta_lf_present;
         public byte delta_lf_res;
         public bool delta_lf_multi;
-
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Delta_lf_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"delta_lf_present = {delta_lf_present}"));
+            if ( delta_lf_present )
+            {
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"delta_lf_res =  {delta_lf_res}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"delta_lf_multi =  {delta_lf_multi}"));
+            }
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -760,6 +1287,33 @@ namespace AV1bitsAnalyzer.Library
         public sbyte[] loop_filter_ref_deltas = new sbyte[8];
         public int[] update_mode_delta = new int[8];
         public sbyte[] loop_filter_mode_deltas = new sbyte[8];
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Loop_filter_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"loop_filter_level = {TypeToString.ByteArray(loop_filter_level)}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"loop_filter_sharpness =  {loop_filter_sharpness}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"loop_filter_delta_enabled =  {loop_filter_delta_enabled}"));
+            if ( loop_filter_delta_enabled )
+            {
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"loop_filter_delta_update =  {loop_filter_delta_update}"));
+                if ( loop_filter_delta_update )
+                {
+                    for ( var i = 0; i < (int) OBULimited.TOTAL_REFS_PER_FRAME; i++ )
+                    {
+                        sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, 
+                            $"(update_ref_delta,loop_filter_ref_deltas) = {update_ref_delta[i]}, {loop_filter_ref_deltas[i]} "));
+                    }
+                    for ( var i = 0; i < 2; i++ )
+                    {
+                        sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, 
+                            $"(update_mode_delta,loop_filter_mode_deltas) = {update_mode_delta[i]}, {loop_filter_mode_deltas[i]} "));
+                    }
+                }
+            }
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -795,6 +1349,21 @@ namespace AV1bitsAnalyzer.Library
         public byte[] cdef_y_sec_strength = new byte[8];
         public byte[] cdef_uv_pri_strength = new byte[8];
         public byte[] cdef_uv_sec_strength = new byte[8];
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Cdef_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"cdef_damping_minus_3 = {cdef_damping_minus_3}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"cdef_bits =  {cdef_bits}"));
+            for ( var i = 0; i < (1 << cdef_bits); i++ )
+            {
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"cdef {i} - y_pri,y_sec,uv_pri,uv_sec"));
+                sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, 
+                    $"{cdef_y_pri_strength[i]},{cdef_y_sec_strength[i]},{cdef_uv_pri_strength[i]},{cdef_uv_sec_strength[i]}"));
+            }
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -820,6 +1389,17 @@ namespace AV1bitsAnalyzer.Library
         public byte[] lr_type = new byte[3];
         public byte lr_unit_shift;
         public int lr_uv_shift;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Lr_params"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"lr_type = {TypeToString.ByteArray(lr_type)}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"lr_unit_shift =  {lr_unit_shift}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"lr_uv_shift =  {lr_uv_shift}"));
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -837,7 +1417,25 @@ namespace AV1bitsAnalyzer.Library
         public byte[] gm_type = new byte[8];
         public int[,] gm_params = new int[8, 6];
         public uint[,] prev_gm_params = new uint[8, 6];
-
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Global_motion_params"));
+            for ( int i = 0; i < 8; i++ ) 
+            {
+                string d = gm_type[i] == (byte)OBULimited.IDENTITY? "IDENTITY"
+                    :gm_type[i] == (byte)OBULimited.TRANSLATION? "TRANSLATION"
+                    :gm_type[i] == (byte)OBULimited.ROTZOOM? "ROTZOOM"
+                    :"AFFINE";
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"gm {i} ({d} - {gm_type[i]})"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, 
+                    $"gm_params =  {gm_params[i, 0]},{gm_params[i, 1]},{gm_params[i, 2]},{gm_params[i, 3]},{gm_params[i, 4]},{gm_params[i, 5]}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, 
+                    $"prev_gm_params = {prev_gm_params[i, 0]},{prev_gm_params[i, 1]},{prev_gm_params[i, 2]},{prev_gm_params[i, 3]},{prev_gm_params[i, 4]},{prev_gm_params[i, 5]}"));
+            }
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -909,6 +1507,333 @@ namespace AV1bitsAnalyzer.Library
         public bool reduced_tx_set;
         public OBUGlobal_motion_params global_motion_params = new();
         public OBUFilmGrainParameters film_grain_params = new();
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            bool FrameIsIntra = frame_type == OBUFrameType.OBU_INTRA_ONLY_FRAME || frame_type == OBUFrameType.OBU_KEY_FRAME;
+
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"FrameHeader"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"show_existing_frame = {show_existing_frame}"));
+            // if ( show_existing_frame )
+            {
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"frame_to_show_map_idx = {frame_to_show_map_idx}"));
+            }
+            //if ( h.decoder_model_info_present_flag && !h.timing_info.equal_picture_interval )
+            {
+                //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"temporal_point_info"));
+                var v = temporal_point_info.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //if ( h.frame_id_numbers_present_flag )
+            {
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"display_frame_id = {display_frame_id}"));
+            }
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_type = {frame_type}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"show_frame = {show_frame}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"showable_frame = {showable_frame}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"error_resilient_mode = {error_resilient_mode}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"disable_cdf_update = {disable_cdf_update}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"allow_screen_content_tools = {allow_screen_content_tools}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"force_integer_mv = {force_integer_mv}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"current_frame_id = {current_frame_id}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_size_override_flag = {frame_size_override_flag}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"order_hint = {order_hint}"));
+
+            var prf = primary_ref_frame;
+            if ( FrameIsIntra || error_resilient_mode )
+            {
+                prf = 0;
+            }
+            string primary_ref = primary_ref_frame == 7 ? "None" : prf.ToString();
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"primary_ref_frame = {primary_ref}"));
+
+            //if ( h.decoder_model_info_present_flag )
+            {
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"buffer_removal_time_present_flag = {buffer_removal_time_present_flag}"));
+                if ( buffer_removal_time_present_flag )
+                {
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"buffer_removal_time  = {TypeToString.UintArray(buffer_removal_time)}"));
+                }
+            }
+
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"refresh_frame_flags = 0x{refresh_frame_flags:X}, {TypeToString.Bits8(refresh_frame_flags)}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"ref_order_hint = {TypeToString.ByteArray(ref_order_hint)}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_width_minus_1 = {frame_width_minus_1}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_height_minus_1 = {frame_height_minus_1}"));
+            {
+                var v = superres_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"render_and_frame_size_different = {render_and_frame_size_different}"));
+            if(render_and_frame_size_different)
+            {
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"render_width_minus_1 = {render_width_minus_1}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"render_height_minus_1 = {render_height_minus_1}"));
+            }
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"RenderWidth = {RenderWidth}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"RenderHeight = {RenderHeight}"));
+            if ( FrameIsIntra )
+            {
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"allow_intrabc = {allow_intrabc}"));
+            }
+            else
+            {
+                /*if ( !h.enable_order_hint )
+                {
+                    sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- frame_refs_short_signaling = 0"));
+                }
+                else
+                {
+                }*/
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"frame_refs_short_signaling = {frame_refs_short_signaling}"));
+                if ( frame_refs_short_signaling )
+                {
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"last_frame_idx = {last_frame_idx}"));
+                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"gold_frame_idx = {gold_frame_idx}"));
+                }
+
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"ref_frame_idx = {TypeToString.ByteArray(ref_frame_idx)}"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"delta_frame_id_minus_1 = {TypeToString.ByteArray(delta_frame_id_minus_1)}"));
+            }
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"found_ref = {found_ref}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"allow_high_precision_mv = {allow_high_precision_mv}"));
+            {
+                var v = interpolation_filter.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"interpolation_filter = {interpolation_filter}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"is_motion_mode_switchable = {is_motion_mode_switchable}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"use_ref_frame_mvs = {use_ref_frame_mvs}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"disable_frame_end_update_cdf = {disable_frame_end_update_cdf}"));
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- tile_info = {tile_info}"));
+            {
+                var v = tile_info.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- quantization_params = {quantization_params}"));
+            {
+                var v = quantization_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- segmentation_params = {segmentation_params}"));
+            {
+                var v = segmentation_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- delta_q_params = {delta_q_params}"));
+            {
+                var v = delta_q_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- delta_lf_params = {delta_lf_params}"));
+            {
+                var v = delta_lf_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- loop_filter_params = {loop_filter_params}"));
+            {
+                var v = loop_filter_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- cdef_params = {cdef_params}"));
+            {
+                var v = cdef_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"|- lr_params = {lr_params}"));
+            {
+                var v = lr_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"tx_mode_select = {tx_mode_select}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"skip_mode_present = {skip_mode_present}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"reference_select = {reference_select}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"allow_warped_motion = {allow_warped_motion}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"reduced_tx_set = {reduced_tx_set}"));
+            {
+                var v = global_motion_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+            {
+                var v = film_grain_params.ToSpecTree();
+                foreach ( var v2 in v )
+                {
+                    var v3 = v2;
+                    v3.level += 1;
+                    sb.Enqueue(v3);
+                }
+            }
+
+            return sb;
+        }
+
+        public override string ToString ()
+        {
+            bool FrameIsIntra = frame_type == OBUFrameType.OBU_INTRA_ONLY_FRAME || frame_type == OBUFrameType.OBU_KEY_FRAME;
+
+            StringBuilder sb = new();
+            sb.Append($"FrameHeader");
+            sb.Append($"\r\n |- show_existing_frame = {show_existing_frame}");
+            // if ( show_existing_frame )
+            {
+                sb.Append($"\r\n    - frame_to_show_map_idx = {frame_to_show_map_idx}");
+            }
+            //if ( h.decoder_model_info_present_flag && !h.timing_info.equal_picture_interval )
+            {
+                sb.Append($"\r\n |- temporal_point_info");
+                sb.Append($"\r\n    - ( {temporal_point_info.ToString()} )");
+            }
+            //if ( h.frame_id_numbers_present_flag )
+            {
+                sb.Append($"\r\n |- display_frame_id = {display_frame_id}");
+            }
+            sb.Append($"\r\n |- frame_type = {frame_type}");
+            sb.Append($"\r\n |- show_frame = {show_frame}");
+            sb.Append($"\r\n |- showable_frame = {showable_frame}");
+            sb.Append($"\r\n |- error_resilient_mode = {error_resilient_mode}");
+            sb.Append($"\r\n |- disable_cdf_update = {disable_cdf_update}");
+            sb.Append($"\r\n |- allow_screen_content_tools = {allow_screen_content_tools}");
+            if ( FrameIsIntra )
+                sb.Append($"\r\n |- force_integer_mv = {force_integer_mv}");
+            sb.Append($"\r\n |- current_frame_id = {current_frame_id}");
+            sb.Append($"\r\n |- frame_size_override_flag = {frame_size_override_flag}");
+            sb.Append($"\r\n |- order_hint = {order_hint}");
+
+            var prf = primary_ref_frame;
+            if ( FrameIsIntra || error_resilient_mode )
+            {
+                prf = 0;
+            }
+            string primary_ref = primary_ref_frame == 7 ? "None" : prf.ToString();
+            sb.Append($"\r\n |- primary_ref_frame = {primary_ref}");
+
+            //if ( h.decoder_model_info_present_flag )
+            {
+                sb.Append($"\r\n |- buffer_removal_time_present_flag = {buffer_removal_time_present_flag}");
+                if ( buffer_removal_time_present_flag )
+                {
+                    sb.Append($"\r\n    - buffer_removal_time  = {TypeToString.UintArray(buffer_removal_time)}");
+                }
+            }
+
+            sb.Append($"\r\n |- refresh_frame_flags = 0x{refresh_frame_flags:X}, {TypeToString.Bits8(refresh_frame_flags)}");
+            sb.Append($"\r\n |- ref_order_hint = {TypeToString.ByteArray(ref_order_hint)}");
+            sb.Append($"\r\n |- frame_width_minus_1 = {frame_width_minus_1}");
+            sb.Append($"\r\n |- frame_height_minus_1 = {frame_height_minus_1}");
+            sb.Append($"\r\n |- superres_params = {superres_params}");
+            sb.Append($"\r\n |- render_and_frame_size_different = {render_and_frame_size_different}");
+            sb.Append($"\r\n |- render_width_minus_1 = {render_width_minus_1}");
+            sb.Append($"\r\n |- render_height_minus_1 = {render_height_minus_1}");
+            sb.Append($"\r\n |- RenderWidth = {RenderWidth}");
+            sb.Append($"\r\n |- RenderHeight = {RenderHeight}");
+            if ( FrameIsIntra )
+            {
+                sb.Append($"\r\n |- allow_intrabc = {allow_intrabc}");
+            }
+            else
+            {
+                /*if ( !h.enable_order_hint )
+                {
+                    sb.Append($"\r\n |- frame_refs_short_signaling = 0");
+                }
+                else*/
+                {
+                    sb.Append($"\r\n |- frame_refs_short_signaling = {frame_refs_short_signaling}");
+                    if ( frame_refs_short_signaling )
+                    {
+                        sb.Append($"\r\n |- last_frame_idx = {last_frame_idx}");
+                        sb.Append($"\r\n |_ gold_frame_idx = {gold_frame_idx}");
+                    }
+
+                    sb.Append($"\r\n |- ref_frame_idx = {TypeToString.ByteArray(ref_frame_idx)}");
+                    sb.Append($"\r\n |- delta_frame_id_minus_1 = {TypeToString.ByteArray(delta_frame_id_minus_1)}");
+                }
+            }
+            sb.Append($"\r\n |- found_ref = {found_ref}");
+            sb.Append($"\r\n |- allow_high_precision_mv = {allow_high_precision_mv}");
+            sb.Append($"\r\n |- interpolation_filter = {interpolation_filter}");
+            sb.Append($"\r\n |- is_motion_mode_switchable = {is_motion_mode_switchable}");
+            sb.Append($"\r\n |- use_ref_frame_mvs = {use_ref_frame_mvs}");
+            sb.Append($"\r\n |- disable_frame_end_update_cdf = {disable_frame_end_update_cdf}");
+            sb.Append($"\r\n |- tile_info = {tile_info}");
+            sb.Append($"\r\n |- quantization_params = {quantization_params}");
+            sb.Append($"\r\n |- segmentation_params = {segmentation_params}");
+            sb.Append($"\r\n |- delta_q_params = {delta_q_params}");
+            sb.Append($"\r\n |- delta_lf_params = {delta_lf_params}");
+            sb.Append($"\r\n |- loop_filter_params = {loop_filter_params}");
+            sb.Append($"\r\n |- cdef_params = {cdef_params}");
+            sb.Append($"\r\n |- lr_params = {lr_params}");
+            sb.Append($"\r\n |- tx_mode_select = {tx_mode_select}");
+            sb.Append($"\r\n |- skip_mode_present = {skip_mode_present}");
+            sb.Append($"\r\n |- reference_select = {reference_select}");
+            sb.Append($"\r\n |- allow_warped_motion = {allow_warped_motion}");
+            sb.Append($"\r\n |- reduced_tx_set = {reduced_tx_set}");
+            sb.Append($"\r\n |- global_motion_params = {global_motion_params}");
+            sb.Append($"\r\n |- film_grain_params = {film_grain_params}");
+
+            return sb.ToString();
+        }
     }
 
     public class OBUTileGroup
@@ -918,6 +1843,20 @@ namespace AV1bitsAnalyzer.Library
         public ushort tg_start;
         public ushort tg_end;
         public uint[] TileSize = new uint[1];
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"TileGroup"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"NumTiles = {NumTiles}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"tile_start_and_end_present_flag = {tile_start_and_end_present_flag}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"tg_start = {tg_start}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"tg_end = {tg_end}"));
+            sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"[] TileSize = {TypeToString.UintArray(TileSize)}"));
+
+            return sb;
+        }
 
         public override string ToString ()
         {
@@ -942,7 +1881,18 @@ namespace AV1bitsAnalyzer.Library
         public byte anchor_tile_col;
         public ushort tile_data_size_minus_1;
         public byte[]? coded_tile_data;
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
 
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"anchor_frame_idx = {anchor_frame_idx}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"anchor_tile_row = {anchor_tile_row}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"anchor_tile_col = {anchor_tile_col}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"tile_data_size_minus_1 = {tile_data_size_minus_1}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"[] coded_tile_data = {coded_tile_data?.Length}"));
+
+            return sb;
+        }
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -963,6 +1913,18 @@ namespace AV1bitsAnalyzer.Library
         public byte output_frame_height_in_tiles_minus_1;
         public ushort tile_count_minus_1;
         public OBUTile_list_entry[]? tile_list_entry;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"output_frame_width_in_tiles_minus_1 = {output_frame_width_in_tiles_minus_1}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"output_frame_height_in_tiles_minus_1 = {output_frame_height_in_tiles_minus_1}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"tile_count_minus_1 = {tile_count_minus_1}"));
+            for ( var i = 0; i <= tile_count_minus_1; i++ )
+                sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"tile_list_entry = {tile_list_entry![i]}"));
+            return sb;
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();
@@ -989,6 +1951,20 @@ namespace AV1bitsAnalyzer.Library
         public OBUMetadataTimecode metadata_timecode;
         public OBUUnregisteredMetadata unregistered;
 
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_root, "MetaData"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"metadata_type = ${metadata_type}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"metadata_hdr_cll = ${metadata_hdr_cll}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"metadata_hdr_mdcv = ${metadata_hdr_mdcv}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"metadata_scalability = ${metadata_scalability}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"metadata_itut_t35 = ${metadata_itut_t35}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"metadata_timecode = ${metadata_timecode}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"unregistered = ${unregistered}"));
+            return sb;
+        }
+
         public override string ToString ()
         {
             StringBuilder sb = new ();
@@ -1010,11 +1986,19 @@ namespace AV1bitsAnalyzer.Library
     {
         public ushort max_cll;
         public ushort max_fall;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"\r\n   - max_cll,max_fall = {max_cll},{max_fall}"));
+            return sb;
+        }
+
         public override string ToString ()
         {
             StringBuilder sb = new();
 
-            sb.Append($"\r\n   - max_cll,max_fall = {max_cll},{max_fall}\r\n");
+            sb.Append($"\r\n   - max_cll,max_fall = {max_cll},{max_fall}");
 
             return sb.ToString();
         }
@@ -1028,6 +2012,16 @@ namespace AV1bitsAnalyzer.Library
         public ushort white_point_chromaticity_y;
         public uint luminance_max;
         public uint luminance_min;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"primary_chromaticity_x,primary_chromaticity_y = ({primary_chromaticity_x[0]},{primary_chromaticity_y[0]}),({primary_chromaticity_x[1]},{primary_chromaticity_y[1]}),({primary_chromaticity_x[2]},{primary_chromaticity_y[2]})"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"white_point_chromaticity_x,white_point_chromaticity_y = ({white_point_chromaticity_x},{white_point_chromaticity_y})"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"luminance_max,luminance_min = ({luminance_max},{luminance_min})"));
+            return sb;
+        }
+
         public override string ToString ()
         {
             StringBuilder sb = new();
@@ -1087,6 +2081,26 @@ namespace AV1bitsAnalyzer.Library
         public byte hours_value;
         public byte time_offset_length;
         public byte time_offset_value;
+
+        public SpecTree ToSpecTree ()
+        {
+            SpecTree sb = new ();
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"counting_type = {counting_type}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"full_timestamp_flag = {full_timestamp_flag}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"discontinuity_flag = {discontinuity_flag}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"cnt_dropped_flag = {cnt_dropped_flag}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"n_frames = {n_frames}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"seconds_flag = {seconds_flag}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"seconds_value = {seconds_value}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"minutes_flag = {minutes_flag}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"minutes_value = {minutes_value}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"hours_flag = {hours_flag}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"hours_value = {hours_value}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"time_offset_length = {time_offset_length}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"time_offset_value = {time_offset_value}"));
+            return sb;
+        }
+
         public override string ToString ()
         {
             StringBuilder sb = new();

@@ -1,7 +1,29 @@
 ﻿using System.Text;
 
+
 namespace AV1bitsAnalyzer.Library
 {
+    public enum STItemNoteType
+    {
+        NoteType_root = 0x01,
+        NoteType_node = 0x02,
+        NoteType_logical = 0x04,
+        NoteType_logicalnode = NoteType_node | NoteType_logical,
+    };
+    public struct STItem
+    {
+        public int level = 0;
+        public STItemNoteType type = 0; /* node, subnote, logical */
+        public string value = string.Empty;
+
+        public STItem (int lv, STItemNoteType tp, string v)
+        {
+            level = lv;
+            type = tp; 
+            value = v;
+        }
+    }
+#if DD
     internal class SpecString
     {
         public static string ToFrameHeaderString(OBUFrameHeader v, OBUSequenceHeader h)
@@ -147,6 +169,7 @@ namespace AV1bitsAnalyzer.Library
 
                 sb.Append($"\r\n |- initial_display_delay_present_flag = {v.initial_display_delay_present_flag}");
                 sb.Append($"\r\n |- operating_points_cnt_minus_1 = {v.operating_points_cnt_minus_1}");
+                sb.Append($"\r\n   --");
                 for ( var i = 0; i <= v.operating_points_cnt_minus_1; i++ )
                 {
                     sb.Append($"\r\n    - operating_point_idc = {v.operating_point_idc[i]}");
@@ -247,4 +270,5 @@ namespace AV1bitsAnalyzer.Library
             return sb.ToString();
         }
     }
+#endif
 }
