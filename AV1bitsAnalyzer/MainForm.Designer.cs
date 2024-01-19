@@ -35,6 +35,7 @@
             System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             tableLayoutPanel1 = new TableLayoutPanel();
+            TVSpec = new TreeView();
             LVHexInfo = new ListView();
             HexBoxDetail = new Be.Windows.Forms.HexBox();
             splitContainer1 = new SplitContainer();
@@ -44,7 +45,6 @@
             BtnNextFrame = new Button();
             BtnPreviousFrame = new Button();
             BtnLoop = new Button();
-            RBoxObu = new RichTextBox();
             BtnAbout = new Button();
             flowLayoutPanel1 = new FlowLayoutPanel();
             BtnOpen = new Button();
@@ -74,10 +74,10 @@
             tableLayoutPanel1.ColumnCount = 2;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 71.6F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 28.4F));
+            tableLayoutPanel1.Controls.Add(TVSpec, 1, 0);
             tableLayoutPanel1.Controls.Add(LVHexInfo, 0, 0);
             tableLayoutPanel1.Controls.Add(HexBoxDetail, 0, 1);
             tableLayoutPanel1.Controls.Add(splitContainer1, 1, 1);
-            tableLayoutPanel1.Controls.Add(RBoxObu, 1, 0);
             tableLayoutPanel1.Location = new Point(2, 239);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 2;
@@ -85,6 +85,15 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 26.4423084F));
             tableLayoutPanel1.Size = new Size(1320, 728);
             tableLayoutPanel1.TabIndex = 1;
+            // 
+            // TVSpec
+            // 
+            TVSpec.Anchor =  AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            TVSpec.Location = new Point(948, 3);
+            TVSpec.Name = "TVSpec";
+            TVSpec.Size = new Size(369, 529);
+            TVSpec.TabIndex = 9;
+            TVSpec.MouseMove += TVSpec_MouseMove;
             // 
             // LVHexInfo
             // 
@@ -211,17 +220,6 @@
             BtnLoop.Text = "🔁";
             BtnLoop.UseVisualStyleBackColor = true;
             BtnLoop.Click += BtnLoop_Click;
-            // 
-            // RBoxObu
-            // 
-            RBoxObu.Anchor =  AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            RBoxObu.Location = new Point(948, 3);
-            RBoxObu.Name = "RBoxObu";
-            RBoxObu.ReadOnly = true;
-            RBoxObu.Size = new Size(369, 529);
-            RBoxObu.TabIndex = 4;
-            RBoxObu.Text = "";
-            RBoxObu.WordWrap = false;
             // 
             // BtnAbout
             // 
@@ -394,7 +392,6 @@
         private Button BtnExpand;
         private Button button5;
         private Button BtnAbout;
-        private RichTextBox RBoxObu;
         private LibVLCSharp.WinForms.VideoView VVVlc;
         private Button BtnPlay;
         private Button BtnNextFrame;
@@ -406,5 +403,6 @@
         private FlowLayoutPanel flowLayoutPanel2;
         private Button BtnFormat;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart1;
+        private TreeView TVSpec;
     }
 }

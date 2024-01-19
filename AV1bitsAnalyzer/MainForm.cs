@@ -3,7 +3,6 @@ using AV1bitsAnalyzer.Properties;
 using Be.Windows.Forms;
 using LibVLCSharp.Shared;
 using System.Diagnostics;
-using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
 
 namespace AV1bitsAnalyzer
@@ -276,12 +275,12 @@ namespace AV1bitsAnalyzer
                             string v4 = obuRes.orderHint == -1 ? "-" : obuRes.orderHint.ToString();
                             string v5 = obuRes.display_frame_id == uint.MaxValue ? "-" : obuRes.display_frame_id.ToString();
                             List<string> ss = [$"    {obu.Type}", $"{obu.ObuOffset}", $"{obu.Size}", $"{obu.Tid}, {obu.Sid}"];
-                            if( obuRes.obuType == OBUType.OBU_FRAME || obuRes.obuType == OBUType.OBU_FRAME_HEADER )
+                            if ( obuRes.obuType == OBUType.OBU_FRAME || obuRes.obuType == OBUType.OBU_FRAME_HEADER )
                             {
                                 ss.Add($"{obuRes.frameType}");
                                 ss.Add($"{v3}, {v4}, {v5}");
                             }
-                            
+
                             var lvi = new ListViewItem(ss.ToArray(), group)
                             {
                                 Tag = obuRes
@@ -319,12 +318,15 @@ namespace AV1bitsAnalyzer
         {
             _parser?.Stop();
             _frames.Clear();
-            RBoxObu.Text = string.Empty;
+            
+            TVSpec.Nodes.Clear();
+            TVSpec.Tag = null;
+
             _parser = null;
             VVVlc.MediaPlayer?.Stop();
             VVVlc.MediaPlayer?.Dispose();
             VVVlc.MediaPlayer = null;
-            
+
             HexBoxDetail.ByteProvider = null;
             _parserCtx = new();
             PBarLoadding.Value = 0;
@@ -388,13 +390,14 @@ namespace AV1bitsAnalyzer
             }
             if ( !fh.show_existing_frame )
             {
-                ret.decode_frame_id = ctx.seqheader.frame_id_numbers_present_flag ? fh.current_frame_id : uint.MaxValue;
+                ret.decode_frame_id = ctx.seqheader!.frame_id_numbers_present_flag ? fh.current_frame_id : uint.MaxValue;
             }
         }
 
         internal struct ObuParseRet
         {
-            public string headerAnalysisRes = string.Empty;
+            //public string headerAnalysisRes = string.Empty;
+            public Queue<STItem> st = new();
             public string frameType = "-";
             public int obuOffset = 0;
             public int obuDataOffset = 0;
@@ -419,7 +422,8 @@ namespace AV1bitsAnalyzer
                         OBUSequenceHeader header = new();
                         ObuOperator.ObpParseSequenceHeader(f, ref header, ref err);
                         _parserCtx.seqheader = header;
-                        ret.headerAnalysisRes = SpecString.ToSeqHeaderString(header);
+                        //ret.headerAnalysisRes = header.ToString();// SpecString.ToSeqHeaderString(header);
+                        ret.st = header.ToSpecTree();
                     }
                     break;
                 case OBUType.OBU_TEMPORAL_DELIMITER:
@@ -431,14 +435,17 @@ namespace AV1bitsAnalyzer
                     {
                         ObuOperator.ObpParseTileGroup(f, ref _parserCtx, ref err);
                         if ( _parserCtx.tileGroup != null )
-                            ret.headerAnalysisRes = _parserCtx.tileGroup.ToString();
+                            ret.st = _parserCtx.tileGroup.ToSpecTree();
+                        //if ( _parserCtx.tileGroup != null )
+                        //ret.headerAnalysisRes = _parserCtx.tileGroup.ToString();
                     }
                     break;
                 case OBUType.OBU_METADATA:
                     {
                         OBUMetadata meta = new();
                         ObuOperator.ObpParseMetadata(f, ref meta, ref err);
-                        ret.headerAnalysisRes = meta.ToString();
+                        //ret.headerAnalysisRes = meta.ToString();
+                        ret.st = meta.ToSpecTree();
                     }
                     break;
                 case OBUType.OBU_FRAME:
@@ -448,13 +455,19 @@ namespace AV1bitsAnalyzer
                         int tid = v.Tid, sid = v.Sid;
                         ObuOperator.ObpParseFrame(f, ref _parserCtx, tid, sid, ref err);
                         var fh = _parserCtx.curFrameHeader;
-                        ret.frameType = ParseFrameType(fh);
-                        var ssHeader = SpecString.ToFrameHeaderString(fh, _parserCtx.seqheader);
+                        ret.frameType = ParseFrameType(fh!);
+                        /*var ssHeader = fh!.ToString();// SpecString.ToFrameHeaderString(fh, _parserCtx.seqheader);
                         var tileGroupStrs = _parserCtx.tileGroup?.ToString();
                         var sb = new StringBuilder();
                         sb.Append(ssHeader);
                         sb.Append(tileGroupStrs);
-                        ret.headerAnalysisRes = sb.ToString();
+                        ret.headerAnalysisRes = sb.ToString();*/
+                        ret.st = fh.ToSpecTree();
+                        foreach ( var v4 in _parserCtx.tileGroup.ToSpecTree() )
+                        {
+                            ret.st.Enqueue(v4);
+                        }
+                        ret.orderHint = fh.order_hint;
                         ret.orderHint = fh.order_hint;
                         ParseFrameID(ref ret, fh, _parserCtx);
                     }
@@ -466,8 +479,10 @@ namespace AV1bitsAnalyzer
                         int tid = v.Tid, sid = v.Sid;
                         ObuOperator.ObpParseFrameHeader(f, ref _parserCtx, tid, sid, ref err);
                         var fh = _parserCtx.curFrameHeader;
-                        ret.frameType = ParseFrameType(fh);
-                        ret.headerAnalysisRes = SpecString.ToFrameHeaderString(fh, _parserCtx.seqheader);
+                        ret.frameType = ParseFrameType(fh!);
+                        //ret.headerAnalysisRes = fh.ToString();
+                        // SpecString.ToFrameHeaderString(fh, _parserCtx.seqheader);
+                        ret.st = fh!.ToSpecTree();
                         ret.orderHint = fh.order_hint;
                         ParseFrameID(ref ret, fh, _parserCtx);
                     }
@@ -476,7 +491,8 @@ namespace AV1bitsAnalyzer
                     {
                         OBUTileList lsit = new();
                         ObuOperator.ObpParseTileList(f, ref lsit, ref err);
-                        ret.headerAnalysisRes = lsit.ToString();
+                        //ret.headerAnalysisRes = lsit.ToString();
+                        ret.st = lsit.ToSpecTree();
                     }
                     break;
                 case OBUType.OBU_PADDING:
@@ -507,32 +523,83 @@ namespace AV1bitsAnalyzer
             if ( item?.Tag != null && gp?.Tag != null )
             {
                 FramesInfo v = (FramesInfo)gp.Tag;
-                ObuParseRet v2 = (ObuParseRet)item.Tag;
-                HexBoxDetail.SelectionStart = v.Address + v2.obuOffset;
+                ObuParseRet pret = (ObuParseRet)item.Tag;
+                HexBoxDetail.SelectionStart = v.Address + pret.obuOffset;
                 HexBoxDetail.ScrollByteIntoView(HexBoxDetail.SelectionStart);
                 HexBoxDetail.HighligedRegions.Clear();
 
                 HexBox.HighlightedRegion region2 = new ()
                 {
-                    Start = (int)(v.Address + v2.obuOffset),
-                    Length = v2.obuDataOffset,
+                    Start = (int)(v.Address + pret.obuOffset),
+                    Length = pret.obuDataOffset,
                     Color = Color.IndianRed
                 };
                 HexBox.HighlightedRegion region = new ()
                 {
-                    Start = (int)(v.Address + v2.obuOffset + v2.obuDataOffset),
-                    Length = v2.size,
+                    Start = (int)(v.Address + pret.obuOffset + pret.obuDataOffset),
+                    Length = pret.size,
                     Color = Color.CadetBlue
                 };
 
                 HexBoxDetail.HighligedRegions.Add(region);
                 HexBoxDetail.HighligedRegions.Add(region2);
 
-                if ( v2.obuType != OBUType.OBU_TEMPORAL_DELIMITER )
+                if ( pret.obuType != OBUType.OBU_TEMPORAL_DELIMITER && pret.st.Count > 0 )
                 {
-                    RBoxObu.Invoke(() =>
+                    Stack<TreeNode> roots = new();
+
+                    var v2 = pret.st.Peek();
+                    TreeNode main_root = new()
                     {
-                        RBoxObu.Text = v2.headerAnalysisRes;
+                        Text = "View",
+                        Tag = -1,
+                    };
+
+                    roots.Push(main_root);
+
+                    TreeNode root = roots.Peek();
+                    foreach ( var v4 in pret.st )
+                    {
+                        var require_level = v4.level - 1;
+                        if ( (int) root.Tag < require_level )
+                        {
+                            if ( root.Nodes.Count > 0 )
+                            {
+                                var previous = root.Nodes[root.Nodes.Count - 1];
+                                roots.Push(previous);
+                            }
+                            root = roots.Peek();
+                        }
+                        else if ( (int) root.Tag > require_level )
+                        {
+                            while ( roots.Count > 0 )
+                            {
+                                roots.Pop();
+                                root = roots.Peek();
+                                if ( (int) root.Tag == require_level )
+                                    break;
+                            }
+                        }
+
+                        Debug.Assert((int) root.Tag == require_level);
+                        TreeNode v5 = new ()
+                        {
+                            Text = v4.value,
+                            Tag = v4.level
+                        };
+                        root.Nodes.Add(v5);
+
+                    }
+
+                    TVSpec.Invoke(() =>
+                    {
+                        TVSpec.BeginUpdate();
+                        TVSpec.Nodes.Clear();
+                        TVSpec.Nodes.Add(main_root);
+                        TVSpec.TopNode = main_root;
+                        TVSpec.ExpandAll();
+                        main_root.EnsureVisible();
+                        TVSpec.EndUpdate();
                     });
                 }
 
@@ -666,6 +733,20 @@ namespace AV1bitsAnalyzer
             var view = chart1.ChartAreas[0].AxisX.ScaleView;
             var siz =  Math.Min(Math.Max(view.Position - numberOfPixelsToMove, 0), max);
             chart1.ChartAreas[0].AxisX.ScaleView.Position = siz;
+        }
+
+        private void TVSpec_MouseMove (object sender, MouseEventArgs e)
+        {
+            TreeView _TreeView = (TreeView)sender;
+            TreeNode _Node = _TreeView.GetNodeAt(e.X, e.Y);
+            if ( _Node != null && _Node != _TreeView.Tag )
+            {
+                _TreeView.Refresh();
+                Graphics _Graphics = Graphics.FromHwnd(_TreeView.Handle);
+                _Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, 0, 0, 255)), new Rectangle(new Point(0, _Node.Bounds.Y), new Size(TVSpec.Width, _Node.Bounds.Height)));
+                _Graphics.Dispose();
+                _TreeView.Tag = _Node;
+            }
         }
     }
 }
