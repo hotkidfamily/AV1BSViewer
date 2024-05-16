@@ -351,10 +351,10 @@ namespace AV1bitsAnalyzer.Library
         public SpecTree ToSpecTree ()
         {
             SpecTree sb = new ();
-            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"time_info"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"num_units_in_display_tick = {num_units_in_display_tick}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"time_scale =  {time_scale}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"equal_picture_interval = {equal_picture_interval}"));
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"time_info"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"num_units_in_display_tick = {num_units_in_display_tick}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"time_scale =  {time_scale}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_logicalnode, $"equal_picture_interval = {equal_picture_interval}"));
             if ( equal_picture_interval )
             {
                 sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"num_ticks_per_picture_minus_1 = {num_ticks_per_picture_minus_1}"));
@@ -387,11 +387,11 @@ namespace AV1bitsAnalyzer.Library
         public SpecTree ToSpecTree ()
         {
             SpecTree sb = new ();
-            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"decoder_mode_info"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"buffer_delay_length_minus_1 = {buffer_delay_length_minus_1}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"num_units_in_decoding_tick =  {num_units_in_decoding_tick}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"buffer_removal_time_length_minus_1 = {buffer_removal_time_length_minus_1}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"frame_presentation_time_length_minus_1 = {frame_presentation_time_length_minus_1}"));
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"decoder_mode_info"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"buffer_delay_length_minus_1 = {buffer_delay_length_minus_1}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"num_units_in_decoding_tick =  {num_units_in_decoding_tick}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"buffer_removal_time_length_minus_1 = {buffer_removal_time_length_minus_1}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"frame_presentation_time_length_minus_1 = {frame_presentation_time_length_minus_1}"));
             return sb;
         }
 
@@ -416,10 +416,10 @@ namespace AV1bitsAnalyzer.Library
         public SpecTree ToSpecTree ()
         {
             SpecTree sb = new ();
-            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"opera_parameters_info"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"decoder_buffer_delay = {decoder_buffer_delay}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"encoder_buffer_delay =  {encoder_buffer_delay}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"low_delay_mode_flag = {low_delay_mode_flag}"));
+            //sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"opera_parameters_info"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"decoder_buffer_delay = {decoder_buffer_delay}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"encoder_buffer_delay =  {encoder_buffer_delay}"));
+            sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"low_delay_mode_flag = {low_delay_mode_flag}"));
             return sb;
         }
 
@@ -581,7 +581,7 @@ namespace AV1bitsAnalyzer.Library
                     }
                 }
 
-                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"decoder_model_info_present_flag = {decoder_model_info_present_flag}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"decoder_model_info_present_flag = {decoder_model_info_present_flag}"));
                 if ( decoder_model_info_present_flag )
                 {
                     //sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"  - decoder_model_info = ( {decoder_model_info.ToString()} )"));
@@ -589,27 +589,27 @@ namespace AV1bitsAnalyzer.Library
                     foreach ( var tr in t )
                     {
                         var t3 = tr;
-                        t3.level += 1 + 1;
+                        t3.level += 2 + 1;
                         sb.Enqueue(t3);
                     }
                 }
 
-                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"initial_display_delay_present_flag = {initial_display_delay_present_flag}"));
-                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_logicalnode, $"operating_points_cnt_minus_1 = {operating_points_cnt_minus_1}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"initial_display_delay_present_flag = {initial_display_delay_present_flag}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"operating_points_cnt_minus_1 = {operating_points_cnt_minus_1}"));
                 for ( var i = 0; i <= operating_points_cnt_minus_1; i++ )
                 {
-                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"operating_point_idc = {operating_point_idc[i]}"));
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"operating_point_idc = {operating_point_idc[i]}"));
                     var level = seq_level_idx[i];
-                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"seq_level_idx = {level}"));
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"seq_level_idx = {level}"));
                     bool st = seq_tier[i];
                     if ( level < 7 )
                     {
                         st = false;
                     }
-                    sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"seq_tier = {st}"));
+                    sb.Enqueue(new STItem(3, STItemNoteType.NoteType_logicalnode, $"seq_tier = {st}"));
                     if ( decoder_model_info_present_flag )
                     {
-                        sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"decoder_model_present_for_this_op = {decoder_model_present_for_this_op[i]}"));
+                        sb.Enqueue(new STItem(3, STItemNoteType.NoteType_logicalnode, $"decoder_model_present_for_this_op = {decoder_model_present_for_this_op[i]}"));
                         if ( decoder_model_present_for_this_op[i] )
                         {
                             //sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"operating_parameters_info = ( {operating_parameters_info[i]} )"));
@@ -617,17 +617,17 @@ namespace AV1bitsAnalyzer.Library
                             foreach ( var tr in t )
                             {
                                 var t3 = tr;
-                                t3.level += 2 + 1;
+                                t3.level += 3 + 1;
                                 sb.Enqueue(t3);
                             }
                         }
                     }
                     if ( initial_display_delay_present_flag )
                     {
-                        sb.Enqueue(new STItem(2, STItemNoteType.NoteType_logicalnode, $"initial_display_delay_present_for_this_op = {initial_display_delay_present_for_this_op[i]}"));
+                        sb.Enqueue(new STItem(3, STItemNoteType.NoteType_logicalnode, $"initial_display_delay_present_for_this_op = {initial_display_delay_present_for_this_op[i]}"));
                         if ( initial_display_delay_present_for_this_op[i] )
                         {
-                            sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, $"initial_display_delay_minus_1 = {initial_display_delay_minus_1[i]}"));
+                            sb.Enqueue(new STItem(4, STItemNoteType.NoteType_node, $"initial_display_delay_minus_1 = {initial_display_delay_minus_1[i]}"));
                         }
                     }
                 }
@@ -1355,12 +1355,10 @@ namespace AV1bitsAnalyzer.Library
             SpecTree sb = new ();
             sb.Enqueue(new STItem(0, STItemNoteType.NoteType_node, $"Cdef_params"));
             sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"cdef_damping_minus_3 = {cdef_damping_minus_3}"));
-            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"cdef_bits =  {cdef_bits}"));
+            sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"cdef_bits = {cdef_bits} (y,uv(pri,sec))"));
             for ( var i = 0; i < (1 << cdef_bits); i++ )
             {
-                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"cdef {i} - y_pri,y_sec,uv_pri,uv_sec"));
-                sb.Enqueue(new STItem(3, STItemNoteType.NoteType_node, 
-                    $"{cdef_y_pri_strength[i]},{cdef_y_sec_strength[i]},{cdef_uv_pri_strength[i]},{cdef_uv_sec_strength[i]}"));
+                sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, $"cdef{i} - ({cdef_y_pri_strength[i]},{cdef_y_sec_strength[i]}),({cdef_uv_pri_strength[i]},{cdef_uv_sec_strength[i]})"));
             }
             return sb;
         }
@@ -1428,11 +1426,11 @@ namespace AV1bitsAnalyzer.Library
                     :gm_type[i] == (byte)OBULimited.TRANSLATION? "TRANSLATION"
                     :gm_type[i] == (byte)OBULimited.ROTZOOM? "ROTZOOM"
                     :"AFFINE";
-                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"gm {i} ({d} - {gm_type[i]})"));
+                sb.Enqueue(new STItem(1, STItemNoteType.NoteType_node, $"gm-params {i} ({d} - {gm_type[i]})"));
                 sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, 
-                    $"gm_params =  {gm_params[i, 0]},{gm_params[i, 1]},{gm_params[i, 2]},{gm_params[i, 3]},{gm_params[i, 4]},{gm_params[i, 5]}"));
+                    $"cur =  {gm_params[i, 0]},{gm_params[i, 1]},{gm_params[i, 2]},{gm_params[i, 3]},{gm_params[i, 4]},{gm_params[i, 5]}"));
                 sb.Enqueue(new STItem(2, STItemNoteType.NoteType_node, 
-                    $"prev_gm_params = {prev_gm_params[i, 0]},{prev_gm_params[i, 1]},{prev_gm_params[i, 2]},{prev_gm_params[i, 3]},{prev_gm_params[i, 4]},{prev_gm_params[i, 5]}"));
+                    $"prev = {prev_gm_params[i, 0]},{prev_gm_params[i, 1]},{prev_gm_params[i, 2]},{prev_gm_params[i, 3]},{prev_gm_params[i, 4]},{prev_gm_params[i, 5]}"));
             }
             return sb;
         }
