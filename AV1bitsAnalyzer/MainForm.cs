@@ -3,6 +3,7 @@ using AV1bitsAnalyzer.Properties;
 using Be.Windows.Forms;
 using LibVLCSharp.Shared;
 using System.Diagnostics;
+using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
 namespace AV1bitsAnalyzer
@@ -318,9 +319,11 @@ namespace AV1bitsAnalyzer
         {
             _parser?.Stop();
             _frames.Clear();
-            
-            TVSpec.Nodes.Clear();
-            TVSpec.Tag = null;
+
+            TVHeader.Nodes.Clear();
+            TVHeader.Tag = null;
+            TVFrame.Nodes.Clear();
+            TVFrame.Tag = null;
 
             _parser = null;
             VVVlc.MediaPlayer?.Stop();
@@ -590,17 +593,34 @@ namespace AV1bitsAnalyzer
                         root.Nodes.Add(v5);
 
                     }
-
-                    TVSpec.Invoke(() =>
+                    if ( pret.obuType == OBUType.OBU_SEQUENCE_HEADER )
                     {
-                        TVSpec.BeginUpdate();
-                        TVSpec.Nodes.Clear();
-                        TVSpec.Nodes.Add(main_root);
-                        TVSpec.TopNode = main_root;
-                        TVSpec.ExpandAll();
-                        main_root.EnsureVisible();
-                        TVSpec.EndUpdate();
-                    });
+                        tabControl1.SelectedTab = tabPage1;
+                        TVHeader.Invoke(() =>
+                        {
+                            TVHeader.BeginUpdate();
+                            TVHeader.Nodes.Clear();
+                            TVHeader.Nodes.Add(main_root);
+                            TVHeader.TopNode = main_root;
+                            TVHeader.ExpandAll();
+                            main_root.EnsureVisible();
+                            TVHeader.EndUpdate();
+                        });
+                    }
+                    else
+                    {
+                        tabControl1.SelectedTab = tabPage2;
+                        TVFrame.Invoke(() =>
+                        {
+                            TVFrame.BeginUpdate();
+                            TVFrame.Nodes.Clear();
+                            TVFrame.Nodes.Add(main_root);
+                            TVFrame.TopNode = main_root;
+                            TVFrame.ExpandAll();
+                            main_root.EnsureVisible();
+                            TVFrame.EndUpdate();
+                        });
+                    }
                 }
 
                 var idx = (item.Index + 1) * 1.0f;
@@ -743,7 +763,7 @@ namespace AV1bitsAnalyzer
             {
                 _TreeView.Refresh();
                 Graphics _Graphics = Graphics.FromHwnd(_TreeView.Handle);
-                _Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, 0, 0, 255)), new Rectangle(new Point(0, _Node.Bounds.Y), new Size(TVSpec.Width, _Node.Bounds.Height)));
+                _Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, 0, 0, 255)), new Rectangle(new Point(0, _Node.Bounds.Y), new Size(TVHeader.Width, _Node.Bounds.Height)));
                 _Graphics.Dispose();
                 _TreeView.Tag = _Node;
             }
